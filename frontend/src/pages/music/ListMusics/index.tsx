@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useMusics } from '../../../hooks/useMusics';
+import { useQuery } from '@tanstack/react-query';
+import { getMusicList } from './api';
 import { Button } from '../../../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -11,7 +12,12 @@ export const ListMusics: React.FC = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   
-  const { data, isLoading, error } = useMusics({ page, perPage });
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['musics', page, perPage],
+    queryFn: () => getMusicList(page, perPage),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);

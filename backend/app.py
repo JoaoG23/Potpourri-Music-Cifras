@@ -1,9 +1,12 @@
-from flask import Flask
+from flask import Flask, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
 
 from extensions import app, db
+
+# Configure CORS for all origins - configuração mais simples
+CORS(app)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(

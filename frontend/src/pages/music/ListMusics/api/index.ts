@@ -5,5 +5,6 @@ export const getMusicList = async (page: number = 1, perPage: number = 10): Prom
   const response = await api.get('/musicas', {
     params: { page, per_page: perPage }
   });
+  console.log(response.data);
   return response.data;
 };
