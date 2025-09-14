@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Music, Calendar, Clock, Plus } from "lucide-react";
+import { Music, Calendar, Clock, Plus, Eye, Trash2 } from "lucide-react";
 
 import {
   Table,
@@ -40,8 +40,7 @@ export const ListPotpourris: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["potpourris", page, perPage],
     queryFn: () => getPotpourriList(page, perPage),
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
+    refetchOnWindowFocus: true,
   });
 
   const handlePerPageChange = (newPerPage: string) => {
@@ -117,14 +116,14 @@ export const ListPotpourris: React.FC = () => {
                   <TableHead>Nome do Potpourri</TableHead>
                   <TableHead>Criado em</TableHead>
                   <TableHead>Atualizado em</TableHead>
+                  <TableHead className="text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.potpourri?.map((potpourri) => (
                   <TableRow
                     key={potpourri.id}
-                    onClick={() => navigate(`/view-potpourri/${potpourri.id}`)}
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="hover:bg-gray-50"
                   >
                     <TableCell className="font-mono text-sm">
                       {potpourri.id}
@@ -147,6 +146,32 @@ export const ListPotpourris: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-400" />
                         {formatDate(potpourri.updated_at)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/view-potpourri/${potpourri.id}`);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/list-potpourris/remove/${potpourri.id}`);
+                          }}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

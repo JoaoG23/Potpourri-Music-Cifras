@@ -86,12 +86,19 @@ class PotpourriService:
     
     @staticmethod
     def delete_potpourri(potpourri_id: int) -> bool:
-        """Delete potpourri by ID"""
+        """Delete potpourri by ID and all related musicas_potpourri"""
         try:
             potpourri = Potpourri.query.get(potpourri_id)
             if not potpourri:
                 raise Exception("Potpourri não encontrado")
             
+            # Primeiro, excluir todos os relacionamentos musicas_potpourri
+            related_musicas = MusicasPotpourri.query.filter_by(potpourri_id=potpourri_id).all()
+            
+            for musica_potpourri in related_musicas:
+                db.session.delete(musica_potpourri)
+            
+            # Depois, excluir o potpourri
             db.session.delete(potpourri)
             db.session.commit()
             return True
