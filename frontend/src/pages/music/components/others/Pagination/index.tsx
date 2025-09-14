@@ -1,16 +1,17 @@
 import { Button } from "@/components/ui/button";
 import React from "react";
 
-type PaginationPropsT<T = unknown> = {
+type PaginationProps<T = unknown> = {
   page: number;
   setPage: (page: number) => void;
   data: T;
 };
-export const Pagination: React.FC<PaginationPropsT<T>> = ({
+
+export const Pagination = <T extends { pagination?: { has_prev?: boolean; has_next?: boolean; pages?: number } }>({
   page,
   setPage,
   data,
-}) => {
+}: PaginationProps<T>): React.ReactElement => {
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
@@ -28,7 +29,7 @@ export const Pagination: React.FC<PaginationPropsT<T>> = ({
 
       <div className="flex items-center gap-1">
         {Array.from(
-          { length: Math.min(5, data?.pagination?.pages) },
+          { length: Math.min(5, data?.pagination?.pages || 1) },
           (_, i) => {
             const pageNum = i + 1;
             return (

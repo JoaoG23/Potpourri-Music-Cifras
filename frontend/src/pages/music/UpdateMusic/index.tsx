@@ -27,9 +27,9 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Textarea } from "../../../components/ui/textarea";
 import { Slider } from "../../../components/ui/slider";
 import { Loading } from "../components/others/Loading";
+import { ChordTextarea } from "./components/ChordTextarea";
 
 import type { Music } from "../types/Music";
 
@@ -294,12 +294,20 @@ export const UpdateMusic: React.FC = () => {
                   Foco Principal
                 </span>
               </div>
-              <Textarea
+              <ChordTextarea
                 id="cifra"
-                {...register("cifra")}
+                value={watch("cifra")}
+                onChange={(value) => {
+                  // Atualizar o valor do formulário
+                  const event = {
+                    target: { name: "cifra", value }
+                  } as React.ChangeEvent<HTMLTextAreaElement>;
+                  register("cifra").onChange(event);
+                }}
                 placeholder="Cole aqui a cifra completa da música com acordes e letra..."
                 rows={18}
                 className="font-mono text-sm border-2 border-blue-200 focus:border-blue-500 transition-colors resize-none w-full"
+                name="cifra"
               />
               <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
                 💡 <strong>Dica:</strong> Cole aqui a cifra completa da música.
