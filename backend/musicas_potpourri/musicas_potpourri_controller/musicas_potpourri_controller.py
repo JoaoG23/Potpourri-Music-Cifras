@@ -67,7 +67,7 @@ def get_musicas_potpourri_by_id(musicas_potpourri_id: int):
 
 @musicas_potpourri_bp.route('/by-potpourri/<int:potpourri_id>', methods=['GET'])
 def get_musicas_by_potpourri_id(potpourri_id: int):
-    """Get all musicas for a specific potpourri"""
+    """Get all musicas for a specific potpourri with complete music data"""
     try:
         page: int = request.args.get('page', 1, type=int)
         per_page: int = request.args.get('per_page', 10, type=int)
@@ -75,7 +75,13 @@ def get_musicas_by_potpourri_id(potpourri_id: int):
         paginated_musicas_potpourri = MusicasPotpourriService.get_musicas_by_potpourri_id(
             potpourri_id, page, per_page
         )
-        musicas_potpourri_list = [mp.to_dict() for mp in paginated_musicas_potpourri.items]
+        
+        # Process the joined data to include complete music information
+        musicas_potpourri_list = []
+        for musicas_potpourri, musica in paginated_musicas_potpourri.items:
+            musicas_potpourri_dict = musicas_potpourri.to_dict()
+            musicas_potpourri_dict['musica'] = musica.to_dict()
+            musicas_potpourri_list.append(musicas_potpourri_dict)
         
         return jsonify({
             'potpourri_id': potpourri_id,

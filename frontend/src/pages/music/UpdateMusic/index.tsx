@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, type SubmitHandler, Controller } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { Error } from "../components/others/Error";
 import { toast } from "sonner";
 import {
@@ -9,11 +9,6 @@ import {
   User,
   Clock,
   ExternalLink,
-  Loader2,
-  Save,
-  ArrowLeft,
-  Play,
-  Pause,
 } from "lucide-react";
 
 import { getMusicById, updateMusic } from "./api";
@@ -24,12 +19,11 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Slider } from "../../../components/ui/slider";
 import { Loading } from "../components/others/Loading";
 import { ChordTextarea } from "./components/ChordTextarea";
+import { FloatingControls } from "../../../components/FloatingControls";
 
 import type { Music } from "../types/Music";
 
@@ -57,7 +51,7 @@ export const UpdateMusic: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    control,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<MusicFormData>({
@@ -358,92 +352,21 @@ export const UpdateMusic: React.FC = () => {
       </Card>
 
       {/* Componente Flutuante */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <div className="flex flex-col items-end gap-3">
-          {/* Slider de Velocidade */}
-
-          {/* Botão de Play/Pause */}
-          <Button
-            onClick={handlePlayPause}
-            size="lg"
-            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-blue-600 hover:bg-blue-700"
-          >
-            {isPlaying ? (
-              <Pause className="h-6 w-6" />
-            ) : (
-              <Play className="h-6 w-6" />
-            )}
-          </Button>
-
-          {/* Botão de Salvar */}
-          <Button
-            onClick={handleSaveFromFloating}
-            disabled={updateMutation.isPending}
-            size="lg"
-            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-green-600 hover:bg-green-700"
-          >
-            {updateMutation.isPending ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
-            ) : (
-              <Save className="h-6 w-6" />
-            )}
-          </Button>
-
-          {/* Botão de Voltar */}
-          <Button
-            onClick={handleCancel}
-            variant="outline"
-            size="lg"
-            className="rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-all duration-200 bg-white hover:bg-gray-50 border-2"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-
-          <div className="bg-white rounded-lg shadow-lg p-4 border">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Velocidade
-              </Label>
-              <Controller
-                name="velocidade_rolamento"
-                control={control}
-                rules={{
-                  required: "Velocidade de rolamento é obrigatória",
-                  min: {
-                    value: 0.1,
-                    message: "Velocidade mínima é 0.1",
-                  },
-                  max: {
-                    value: 3.0,
-                    message: "Velocidade máxima é 3.0",
-                  },
-                }}
-                render={({ field }) => (
-                  <div className="space-y-2">
-                      <Slider
-                        {...field}
-                        min={0.1}
-                        max={3.0}
-                        step={0.1}
-                        value={[field.value]}
-                        onValueChange={(value) => {
-                          field.onChange(value[0]);
-                          handleSliderChange();
-                        }}
-                        className="w-32"
-                      />
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>0.1x</span>
-                      <span className="font-medium">{field.value}x</span>
-                      <span>3.0x</span>
-                    </div>
-                  </div>
-                )}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <FloatingControls
+        isPlaying={isPlaying}
+        onPlayPause={handlePlayPause}
+        speed={watch("velocidade_rolamento")}
+        onSpeedChange={(speed) => {
+          setValue("velocidade_rolamento", speed);
+          handleSliderChange();
+        }}
+        onSave={handleSaveFromFloating}
+        onBack={handleCancel}
+        isSaving={updateMutation.isPending}
+        minSpeed={0.1}
+        maxSpeed={3.0}
+        speedStep={0.1}
+      />
     </div>
   );
 };

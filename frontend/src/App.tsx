@@ -6,6 +6,7 @@ import { ListMusics } from './pages/music/ListMusics';
 import { UpdateMusic } from './pages/music/UpdateMusic';
 import { ListPotpourris } from './pages/potpourri/ListPotpourris';
 import { AddPotpourri } from './pages/potpourri/AddPotpourri';
+import { ViewPotpourri } from './pages/potpourri/ViewPotpourri';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +45,11 @@ function App() {
           <Route path="/add-potpourri" element={
             <Layout>
               <AddPotpourri />
+            </Layout>
+          } />
+          <Route path="/view-potpourri/:id" element={
+            <Layout>
+              <ViewPotpourri />
             </Layout>
           } />
         </Routes>
