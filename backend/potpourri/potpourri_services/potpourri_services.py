@@ -48,6 +48,7 @@ class PotpourriService:
             if not potpourri:
                 raise Exception("Potpourri não encontrado")
             return potpourri
+        
         except SQLAlchemyError as e:
             raise Exception(f"Erro ao buscar potpourri: {str(e)}")
     

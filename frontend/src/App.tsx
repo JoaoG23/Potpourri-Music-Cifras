@@ -4,6 +4,8 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { ListMusics } from './pages/music/ListMusics';
 import { UpdateMusic } from './pages/music/UpdateMusic';
+import { ListPotpourris } from './pages/potpourri/ListPotpourris';
+import { AddPotpourri } from './pages/potpourri/AddPotpourri';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +34,16 @@ function App() {
           <Route path="/update-music/:id" element={
             <Layout>
               <UpdateMusic />
+            </Layout>
+          } />
+          <Route path="/list-potpourris" element={
+            <Layout>
+              <ListPotpourris />
+            </Layout>
+          } />
+          <Route path="/add-potpourri" element={
+            <Layout>
+              <AddPotpourri />
             </Layout>
           } />
         </Routes>

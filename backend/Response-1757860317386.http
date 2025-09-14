@@ -1,0 +1,38 @@
+HTTP/1.1 201 CREATED
+Server: Werkzeug/3.1.3 Python/3.12.8
+Date: Sun, 14 Sep 2025 14:31:07 GMT
+Content-Type: application/json
+Content-Length: 766
+Access-Control-Allow-Origin: *
+Connection: close
+
+{
+  "data": {
+    "musicas_potpourri": [
+      {
+        "created_at": "2025-09-14T14:31:07.834292",
+        "id": 5,
+        "musica_id": 9,
+        "ordem_tocagem": 1,
+        "potpourri_id": 3,
+        "updated_at": "2025-09-14T14:31:07.834292"
+      },
+      {
+        "created_at": "2025-09-14T14:31:07.901226",
+        "id": 6,
+        "musica_id": 10,
+        "ordem_tocagem": 2,
+        "potpourri_id": 3,
+        "updated_at": "2025-09-14T14:31:07.901226"
+      }
+    ],
+    "potpourri": {
+      "created_at": "2025-09-14T14:31:07.761075",
+      "id": 3,
+      "nome_potpourri": "Potpourri de Samba Completo",
+      "updated_at": "2025-09-14T14:31:07.761075"
+    },
+    "total_musicas": 2
+  },
+  "message": "Potpourri criado com m\u00fasicas com sucesso"
+}

@@ -1,0 +1,32 @@
+Regras gerais!
+ - Sempre que for criar uma função separea em arquivo diferente crie uma pasta para ela em seguida 
+crie um arquivo para a função exemplo funcção criarTestes = criarTestes/criarTeste.ts
+- Use YAGNI (You aren't gonna need it) 
+- DRY veja se alguma função ser reutilizada e a use para o contexto
+
+Passo. 1 
+Vamos iniciar o potporri, Analise o projeto de frontend e Crie um tela de listagem de potporri simples. Reutilize os componentes.
+da pagina music. crie somente a listagem similar. 
+- Use clean code. variaveis que sematicas.
+
+Passo. 2
+Crie a tela de criação do potporri.
+- preciso de carregar as musicas existentes. Use a rota no backend de pesquisa. 
+- devo poder selecionar as musica que quero acrescentar no potporri em seguida
+- devo poder colocar em ordem vai de 1 a infinto
+- 
+enviar para o backend;
+
+Passo. 3
+Visualizar o potporri;
+- Crie uma tela similar de update UpdateMusic.
+- Carregue todas as musica e cifras do potporri uma apos a outra em sua ordem
+- Use as funcionalidade - Ativar scroll automatico. 
+- Utilize as requisições do backend
+
+- Passo 4. 
+Deletar o potporri:
+- Crie uma funcionalidade para deletar potporri
+- Crie uma outra pagina RemovePotpo... questionando
+se de fato quer realizar essa tarefa.
+ 

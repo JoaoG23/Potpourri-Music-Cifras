@@ -102,10 +102,10 @@ Content-Type: application/json
 GET http://localhost:5000/api/musicas-potpourri/?page=1&per_page=10
 
 ### Buscar relacionamento por ID
-GET http://localhost:5000/api/musicas-potpourri/1
+GET http://localhost:5000/api/musicas-potpourri/2
 
 ### Buscar músicas de um potpourri específico
-GET http://localhost:5000/api/musicas-potpourri/by-potpourri/1?page=1&per_page=10
+GET http://localhost:5000/api/musicas-potpourri/by-potpourri/2?page=1&per_page=10
 
 ### Atualizar relacionamento música-potpourri
 PUT http://localhost:5000/api/musicas-potpourri/1
