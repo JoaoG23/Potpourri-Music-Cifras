@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Music, User, Clock } from "lucide-react";
+import { ExternalLink, Music, User, Clock, Plus, Edit, Trash2 } from "lucide-react";
 
 import {
   Table,
@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
 import {
   Select,
   SelectContent,
@@ -40,17 +41,13 @@ export const ListMusics: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ["musics", page, perPage],
     queryFn: () => getMusicList(page, perPage),
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
+    // staleTime: 5 * 60 * 1000,
+    // retry: 1,
   });
 
   const handlePerPageChange = (newPerPage: string) => {
     setPerPage(Number(newPerPage));
     setPage(1);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
   if (isLoading) {
@@ -67,10 +64,19 @@ export const ListMusics: React.FC = () => {
     <div className="container mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Lista de Músicas
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Music className="h-5 w-5" />
+              Lista de Músicas
+            </CardTitle>
+            <Button 
+              onClick={() => navigate("/add-music")}
+              style={{ backgroundColor: '#3b11e0', borderColor: '#3b11e0' }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Música
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Controls */}
@@ -111,14 +117,12 @@ export const ListMusics: React.FC = () => {
                   <TableHead>Artista</TableHead>
                   <TableHead>Velocidade</TableHead>
                   <TableHead>Link</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.musicas?.map((music) => (
-                  <TableRow
-                    key={music.id}
-                    onClick={() => navigate(`/update-music/${music.id}`)}
-                  >
+                  <TableRow key={music.id}>
                     <TableCell className="font-mono text-sm">
                       {music.id}
                     </TableCell>
@@ -155,6 +159,31 @@ export const ListMusics: React.FC = () => {
                         <ExternalLink className="h-4 w-4" />
                         <span className="text-sm">Ver Cifra</span>
                       </a>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/update-music/${music.id}`);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/list-musics/remove/${music.id}`);
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

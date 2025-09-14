@@ -5,6 +5,5 @@ export const getPotpourriList = async (page: number = 1, perPage: number = 10): 
   const response = await api.get('/potpourri', {
     params: { page, per_page: perPage }
   });
-  console.log(response.data);
   return response.data;
 };

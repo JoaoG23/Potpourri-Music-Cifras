@@ -3,16 +3,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { ListMusics } from './pages/music/ListMusics';
+import { AddMusic } from './pages/music/AddMusic';
 import { UpdateMusic } from './pages/music/UpdateMusic';
 import { ListPotpourris } from './pages/potpourri/ListPotpourris';
 import { AddPotpourri } from './pages/potpourri/AddPotpourri';
 import { ViewPotpourri } from './pages/potpourri/ViewPotpourri';
 import { RemovePotpourri } from './pages/potpourri/RemovePotpourri';
+import { RemoveMusic } from './pages/music/RemoveMusic';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,
       retry: 1,
     },
   },
@@ -31,6 +32,11 @@ function App() {
           <Route path="/list-musics" element={
             <Layout>
               <ListMusics />
+            </Layout>
+          } />
+          <Route path="/add-music" element={
+            <Layout>
+              <AddMusic />
             </Layout>
           } />
           <Route path="/update-music/:id" element={
@@ -56,6 +62,11 @@ function App() {
           <Route path="/list-potpourris/remove/:id" element={
             <Layout>
               <RemovePotpourri />
+            </Layout>
+          } />
+          <Route path="/list-musics/remove/:id" element={
+            <Layout>
+              <RemoveMusic />
             </Layout>
           } />
         </Routes>

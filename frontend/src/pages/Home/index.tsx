@@ -25,7 +25,10 @@ export const Home: React.FC = () => {
               Visualize e gerencie sua coleção de músicas
             </p>
             <Link to="/list-musics">
-              <Button className="w-full">
+              <Button 
+                className="w-full"
+                style={{ backgroundColor: '#3b11e0', borderColor: '#3b11e0' }}
+              >
                 Ver Lista de Músicas
               </Button>
             </Link>
@@ -44,7 +47,10 @@ export const Home: React.FC = () => {
               Crie e organize seus potpourris musicais
             </p>
             <Link to="/list-potpourris">
-              <Button className="w-full">
+              <Button 
+                className="w-full"
+                style={{ backgroundColor: '#3b11e0', borderColor: '#3b11e0' }}
+              >
                 Ver Lista de Potpourris
               </Button>
             </Link>

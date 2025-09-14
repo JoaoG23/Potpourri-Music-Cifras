@@ -10,35 +10,35 @@ import {
 } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Loader2, Trash2, ArrowLeft } from "lucide-react";
-import { deletePotpourri, getPotpourriById } from "./api";
+import { deleteMusic, getMusicById } from "./api";
 import { waitTimeAndNavigate } from "@/utils/waitTimeAndNavigate/waitTimeAndNavigate";
 
-export const RemovePotpourri: React.FC = () => {
+export const RemoveMusic: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Buscar dados do potpourri para mostrar informações
-  const { data: potpourriData, isLoading: isLoadingPotpourri } = useQuery({
-    queryKey: ["potpourri", id],
-    queryFn: () => getPotpourriById(Number(id)),
+  // Buscar dados da música para mostrar informações
+  const { data: musicData, isLoading: isLoadingMusic } = useQuery({
+    queryKey: ["music", id],
+    queryFn: () => getMusicById(Number(id)),
     enabled: !!id,
   });
 
-  const potpourri = potpourriData?.potpourri;
+  const music = musicData?.musica;
 
   // Mutation para deletar
   const deleteMutation = useMutation({
-    mutationFn: () => deletePotpourri(Number(id)),
+    mutationFn: () => deleteMusic(Number(id)),
     onSuccess: () => {
-      toast.success("Potpourri removido com sucesso!");
-      waitTimeAndNavigate(navigate, "/list-potpourris", 2000);
+      toast.success("Música removida com sucesso!");
+      waitTimeAndNavigate(navigate, "/list-musics", 2000);
     },
     onError: (error: unknown) => {
       const errorMessage =
         error instanceof Error && "response" in error
           ? (error as { response?: { data?: { message?: string } } }).response
               ?.data?.message
-          : "Erro ao remover potpourri";
+          : "Erro ao remover música";
       toast.error(errorMessage);
     },
   });
@@ -48,10 +48,10 @@ export const RemovePotpourri: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate("/list-potpourris");
+    navigate("/list-musics");
   };
 
-  if (isLoadingPotpourri) {
+  if (isLoadingMusic) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-center h-64">
@@ -61,14 +61,14 @@ export const RemovePotpourri: React.FC = () => {
     );
   }
 
-  if (!potpourri) {
+  if (!music) {
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-gray-600 mb-4">
-                Potpourri não encontrado
+                Música não encontrada
               </h2>
               <Button onClick={handleCancel} variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -88,7 +88,7 @@ export const RemovePotpourri: React.FC = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
-        <h1 className="text-2xl font-bold text-red-600">Remover Potpourri</h1>
+        <h1 className="text-2xl font-bold text-red-600">Remover Música</h1>
       </div>
 
       <Card className="border-red-200">
@@ -101,15 +101,31 @@ export const RemovePotpourri: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h3 className="font-semibold text-red-800 mb-2">
-              Você está prestes a remover o potpourri:
+              Você está prestes a remover a música:
             </h3>
             <div className="space-y-2">
               <p>
-                <strong>Nome:</strong> {potpourri?.nome_potpourri}
+                <strong>Nome:</strong> {music?.nome}
               </p>
               <p>
-                <strong>ID:</strong> {potpourri?.id}
+                <strong>Artista:</strong> {music?.artista}
               </p>
+              <p>
+                <strong>ID:</strong> {music?.id}
+              </p>
+              {music?.link_musica && (
+                <p>
+                  <strong>Link:</strong>{" "}
+                  <a
+                    href={music.link_musica}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {music.link_musica}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
 
@@ -118,9 +134,9 @@ export const RemovePotpourri: React.FC = () => {
             <ul className="text-yellow-700 space-y-1 text-sm">
               <li>• Esta ação não pode ser desfeita</li>
               <li>
-                • Todas as músicas associadas ao potpourri serão removidas
+                • A música será removida de todos os potpourris associados
               </li>
-              <li>• O potpourri será permanentemente excluído</li>
+              <li>• A cifra e todos os dados da música serão permanentemente excluídos</li>
             </ul>
           </div>
 
@@ -129,9 +145,14 @@ export const RemovePotpourri: React.FC = () => {
               onClick={handleDelete}
               variant="destructive"
               className="flex-1"
+              disabled={deleteMutation.isPending}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Sim, Remover Potpourri
+              {deleteMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Sim, Remover Música
             </Button>
             <Button onClick={handleCancel} variant="outline" className="flex-1">
               Cancelar

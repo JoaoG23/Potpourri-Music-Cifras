@@ -5,8 +5,11 @@ import os
 
 from extensions import app, db
 
-# Configure CORS for all origins - configuração mais simples
-CORS(app)
+# Disable automatic slash redirects to prevent CORS issues
+app.url_map.strict_slashes = False
+
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(

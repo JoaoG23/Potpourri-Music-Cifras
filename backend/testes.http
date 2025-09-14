@@ -6,7 +6,7 @@ POST http://localhost:5000/api/musicas
 Content-Type: application/json
 
 {
-    "link_musica": "https://www.cifraclub.com.br/rita-lee/ovelha-negra"
+    "link_musica": "https://www.cifraclub.com.br/fagner/espumas-ao-vento/"
 }
 
 

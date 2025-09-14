@@ -20,3 +20,7 @@ export interface MusicsResponse {
     has_prev: boolean;
   };
 }
+
+export interface AddMusicRequest {
+  link_musica: string;
+}
