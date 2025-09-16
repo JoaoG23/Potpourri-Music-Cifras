@@ -1,7 +1,16 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Music, User, Clock, Plus, Edit, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  Music,
+  User,
+  Clock,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+} from "lucide-react";
 
 import {
   Table,
@@ -26,27 +35,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import { Input } from "../../../components/ui/input";
 
-import { Loading } from "../components/others/Loading";
-import { Error } from "../components/others/Error";
-import { Pagination } from "../components/others/Pagination";
+import { Loading } from "../../../components/custom/Loading";
+import { Error } from "../../../components/custom/Error";
+import { Pagination } from "../../../components/custom/Pagination";
 
-import { getMusicList } from "./api";
+import { getMusicList, searchMusicList } from "./api";
 
 export const ListMusics: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const navigate = useNavigate();
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const shouldSearch = debouncedSearchTerm.length >= 3;
+  
   const { data, isLoading, error } = useQuery({
-    queryKey: ["musics", page, perPage],
-    queryFn: () => getMusicList(page, perPage),
-    // staleTime: 5 * 60 * 1000,
-    // retry: 1,
+    queryKey: ["musics", page, perPage, debouncedSearchTerm],
+    queryFn: () => shouldSearch 
+      ? searchMusicList(debouncedSearchTerm, page, perPage)
+      : getMusicList(page, perPage),
   });
 
   const handlePerPageChange = (newPerPage: string) => {
     setPerPage(Number(newPerPage));
+    setPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
     setPage(1);
   };
 
@@ -60,6 +88,8 @@ export const ListMusics: React.FC = () => {
   const existsMoreThanOnePage =
     data?.pagination?.pages && data?.pagination?.pages > 1;
 
+    const totalPages: number = data?.pagination?.pages || 1;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
@@ -69,9 +99,9 @@ export const ListMusics: React.FC = () => {
               <Music className="h-5 w-5" />
               Lista de Músicas
             </CardTitle>
-            <Button 
+            <Button
               onClick={() => navigate("/add-music")}
-              style={{ backgroundColor: '#3b11e0', borderColor: '#3b11e0' }}
+              style={{ backgroundColor: "#3b11e0", borderColor: "#3b11e0" }}
             >
               <Plus className="h-4 w-4 mr-2" />
               Nova Música
@@ -79,6 +109,25 @@ export const ListMusics: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Search Input */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Pesquisar por música ou artista (mín. 4 caracteres)..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {shouldSearch && (
+              <p className="text-sm text-gray-600 mt-2">
+                Pesquisando por: <span className="font-medium">"{debouncedSearchTerm}"</span>
+              </p>
+            )}
+          </div>
+
           {/* Controls */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -101,8 +150,17 @@ export const ListMusics: React.FC = () => {
 
             {data?.pagination && (
               <div className="text-sm text-gray-600">
-                {data?.pagination?.total} músicas • Página{" "}
-                {data?.pagination?.page} de {data?.pagination?.pages}
+                {shouldSearch ? (
+                  <>
+                    {data?.pagination?.total} resultado(s) para "{debouncedSearchTerm}" • Página{" "}
+                    {data?.pagination?.page} de {data?.pagination?.pages}
+                  </>
+                ) : (
+                  <>
+                    {data?.pagination?.total} músicas • Página{" "}
+                    {data?.pagination?.page} de {data?.pagination?.pages}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -127,12 +185,14 @@ export const ListMusics: React.FC = () => {
                       {music.id}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Music className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium ">
-                          {music.nome || "Sem nome"}
-                        </span>
-                      </div>
+                      <Link to={`/update-music/${music.id}`}>
+                        <div className="flex items-center gap-2">
+                          <Music className="h-4 w-4 text-gray-400" />
+                          <span className="font-medium ">
+                            {music.nome || "Sem nome"}
+                          </span>
+                        </div>
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

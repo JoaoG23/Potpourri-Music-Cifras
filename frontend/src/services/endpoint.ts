@@ -1,7 +1,6 @@
 import axios from 'axios';
-
+const url = import.meta.env.VITE_API_ENDPOINT;
 export const api = axios.create({
-    baseURL: 'http://192.168.100.7:5000/api',
+    baseURL: url,
 });
-
 

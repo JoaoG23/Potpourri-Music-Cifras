@@ -26,9 +26,9 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 
-import { Loading } from "../../music/components/others/Loading";
-import { Error } from "../../music/components/others/Error";
-import { Pagination } from "../../music/components/others/Pagination";
+import { Loading } from "../../../components/custom/Loading";
+import { Error } from "../../../components/custom/Error";
+import { Pagination } from "../../../components/custom/Pagination";
 
 import { getPotpourriList } from "./api";
 

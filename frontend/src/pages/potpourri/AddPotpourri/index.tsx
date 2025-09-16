@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Music, Plus, Trash2, ArrowUp, ArrowDown, Search, User } from "lucide-react";
@@ -21,8 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import { Loading } from "../../music/components/others/Loading";
-import { Error } from "../../music/components/others/Error";
+import { Loading } from "../../../components/custom/Loading";
+import { Error } from "../../../components/custom/Error";
 
 import { getMusicList, createPotpourriWithMusics } from "./api";
 import type { Music as MusicType } from "../../../types/music";
@@ -34,13 +34,23 @@ export const AddPotpourri: React.FC = () => {
   
   const [potpourriName, setPotpourriName] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [selectedMusics, setSelectedMusics] = useState<MusicaPotpourri[]>([]);
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Buscar músicas disponíveis - só busca a partir de 3 caracteres
-  const shouldSearch = searchTerm.length >= 3 || searchTerm.length === 0;
+  const shouldSearch = debouncedSearchTerm.length >= 3 || debouncedSearchTerm.length === 0;
   const { data: musicData, isLoading: isLoadingMusics, error: musicError } = useQuery({
-    queryKey: ["musics", searchTerm],
-    queryFn: () => getMusicList(1, 50, searchTerm),
+    queryKey: ["musics", debouncedSearchTerm],
+    queryFn: () => getMusicList(1, 50, debouncedSearchTerm),
     staleTime: 5 * 60 * 1000,
     enabled: shouldSearch, // Só executa a query se tiver 3+ caracteres ou estiver vazio
   });
@@ -158,6 +168,11 @@ export const AddPotpourri: React.FC = () => {
             {searchTerm.length > 0 && searchTerm.length < 3 && (
               <p className="text-sm text-gray-500">
                 Digite pelo menos 3 caracteres para iniciar a busca
+              </p>
+            )}
+            {shouldSearch && debouncedSearchTerm.length > 0 && (
+              <p className="text-sm text-gray-600">
+                Pesquisando por: <span className="font-medium">"{debouncedSearchTerm}"</span>
               </p>
             )}
           </div>

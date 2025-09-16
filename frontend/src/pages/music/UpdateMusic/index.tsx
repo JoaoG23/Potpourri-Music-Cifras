@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { Error } from "../components/others/Error";
+import { Error } from "../../../components/custom/Error";
 import { toast } from "sonner";
 import {
   Music as MusicIcon,
@@ -21,7 +21,7 @@ import {
 } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Loading } from "../components/others/Loading";
+import { Loading } from "../../../components/custom/Loading";
 import { ChordTextarea } from "./components/ChordTextarea";
 import { FloatingControls } from "../../../components/FloatingControls";
 

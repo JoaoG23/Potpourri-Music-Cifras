@@ -6,3 +6,5 @@ psycopg2-binary==2.9.7
 python-dotenv==1.0.0
 SQLAlchemy==2.0.21
 Werkzeug==2.3.7
+selenium==4.25.0
+webdriver-manager==4.0.0
