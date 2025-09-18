@@ -182,20 +182,11 @@ class PotpourriService:
             if not potpourri:
                 raise Exception("Potpourri não encontrado")
 
-            # Optionally update name
-            if potpourri_data.get('nome_potpourri'):
-                potpourri.nome_potpourri = potpourri_data['nome_potpourri']
-
-            # Validate musics payload
-            if not potpourri_data.get('musicas_potpourri'):
-                raise Exception("Lista de músicas é obrigatória")
-            if not isinstance(potpourri_data.get('musicas_potpourri'), list):
-                raise Exception("musicas_potpourri deve ser uma lista")
-            if len(potpourri_data['musicas_potpourri']) == 0:
-                raise Exception("Lista de músicas não pode estar vazia")
-
+            PotpourriService._validate_potpourri_data(potpourri_data)
             PotpourriService._validate_musicas_potpourri_data(potpourri_data)
-
+            
+            potpourri.nome_potpourri = potpourri_data['nome_potpourri']
+            
             ordens = [m['ordem_tocagem'] for m in potpourri_data['musicas_potpourri']]
             if len(ordens) != len(set(ordens)):
                 raise Exception("Ordens de tocagem devem ser únicas")
@@ -209,15 +200,16 @@ class PotpourriService:
             # Add new relations (validate each music exists)
             musicas_potpourri_list: List[MusicasPotpourri] = []
             for musica_data in potpourri_data['musicas_potpourri']:
-                MusicasPotpourriService._vefify_if_exists_music(musica_data['musica_id'])
-
-                rel = MusicasPotpourri(
-                    potpourri_id=potpourri_id,
-                    musica_id=musica_data['musica_id'],
-                    ordem_tocagem=musica_data['ordem_tocagem']
-                )
-                db.session.add(rel)
-                musicas_potpourri_list.append(rel)
+                # Prepare data for existing create_musicas_potpourri function
+                musica_potpourri_data = {
+                    'potpourri_id': potpourri.id,
+                    'musica_id': musica_data['musica_id'],
+                    'ordem_tocagem': musica_data['ordem_tocagem']
+                }
+                
+                # Use existing service function
+                musicas_potpourri = MusicasPotpourriService.create_musicas_potpourri(musica_potpourri_data)
+                musicas_potpourri_list.append(musicas_potpourri)
 
             # Commit all changes as a single transaction
             db.session.commit()

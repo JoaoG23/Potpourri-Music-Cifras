@@ -121,7 +121,7 @@ DELETE http://localhost:5000/api/musicas-potpourri/1
 
 
 ### Substituir músicas de um potpourri (e opcionalmente atualizar o nome)
-PUT http://localhost:5000/api/potpourri/14/replace-musics
+PUT http://localhost:5000/api/potpourri/16/replace-musics
 Content-Type: application/json
 
 {

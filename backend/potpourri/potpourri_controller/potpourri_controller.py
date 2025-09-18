@@ -153,6 +153,8 @@ def create_potpourri_with_musics():
         }), 201
         
     except Exception as e:
+        if "não encontrado" in str(e):
+            return jsonify({'message': str(e)}), 404
         return jsonify({'message': str(e)}), 500
 
 
