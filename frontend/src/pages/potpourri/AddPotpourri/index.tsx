@@ -36,6 +36,9 @@ export const AddPotpourri: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [selectedMusics, setSelectedMusics] = useState<MusicaPotpourri[]>([]);
+  // Cache local para manter os detalhes das músicas por ID,
+  // evitando que o nome/artista desapareçam quando o resultado da busca muda
+  const [musicCache, setMusicCache] = useState<Record<number, MusicType>>({});
 
   // Debounce search term
   useEffect(() => {
@@ -51,9 +54,21 @@ export const AddPotpourri: React.FC = () => {
   const { data: musicData, isLoading: isLoadingMusics, error: musicError } = useQuery({
     queryKey: ["musics", debouncedSearchTerm],
     queryFn: () => getMusicList(1, 50, debouncedSearchTerm),
-    staleTime: 5 * 60 * 1000,
     enabled: shouldSearch, // Só executa a query se tiver 3+ caracteres ou estiver vazio
   });
+
+  // Sempre que novos resultados de músicas chegarem, atualiza o cache local
+  useEffect(() => {
+    if (musicData?.musicas?.length) {
+      setMusicCache((prev) => {
+        const updated = { ...prev };
+        for (const m of musicData.musicas) {
+          updated[m.id] = m;
+        }
+        return updated;
+      });
+    }
+  }, [musicData]);
 
   // Mutation para criar potpourri
   const createPotpourriMutation = useMutation({
@@ -71,6 +86,8 @@ export const AddPotpourri: React.FC = () => {
       ordem_tocagem: newOrder,
     };
     
+    // Garante que os detalhes da música fiquem em cache
+    setMusicCache((prev) => ({ ...prev, [music.id]: music }));
     setSelectedMusics([...selectedMusics, newMusicaPotpourri]);
   };
 
@@ -257,7 +274,9 @@ export const AddPotpourri: React.FC = () => {
                       </TableHeader>
                       <TableBody>
                         {selectedMusics.map((musicaPotpourri, index) => {
-                          const music = musicData?.musicas?.find(m => m.id === musicaPotpourri.musica_id);
+                          // Busca primeiro no cache, com fallback nos dados carregados atualmente
+                          const music = musicCache[musicaPotpourri.musica_id] ||
+                                        musicData?.musicas?.find(m => m.id === musicaPotpourri.musica_id);
                           return (
                             <TableRow key={musicaPotpourri.musica_id}>
                               <TableCell>

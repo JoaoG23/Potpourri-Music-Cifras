@@ -154,3 +154,24 @@ def create_potpourri_with_musics():
         
     except Exception as e:
         return jsonify({'message': str(e)}), 500
+
+
+@potpourri_bp.route('/<int:potpourri_id>/replace-musics', methods=['PUT'])
+def update_potpourri_replace_musics(potpourri_id: int):
+    """Replace all musics of a potpourri with the provided list (optionally update name)"""
+    try:
+        data: Dict[str, Any] = request.get_json()
+
+        if not data:
+            return jsonify({'message': 'Dados não fornecidos'}), 400
+
+        result = PotpourriService.update_potpourri_and_replace_musics(potpourri_id, data)
+        return jsonify({
+            'message': 'Potpourri atualizado e músicas substituídas com sucesso',
+            'data': result
+        })
+
+    except Exception as e:
+        if "não encontrado" in str(e):
+            return jsonify({'message': str(e)}), 404
+        return jsonify({'message': str(e)}), 500

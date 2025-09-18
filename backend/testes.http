@@ -119,3 +119,17 @@ Content-Type: application/json
 DELETE http://localhost:5000/api/musicas-potpourri/1
 
 
+
+### Substituir músicas de um potpourri (e opcionalmente atualizar o nome)
+PUT http://localhost:5000/api/potpourri/14/replace-musics
+Content-Type: application/json
+
+{
+    "nome_potpourri": "EDITADA",
+    "musicas_potpourri": [
+        { "musica_id": 78, "ordem_tocagem": 1 },
+        { "musica_id": 79, "ordem_tocagem": 2 },
+        { "musica_id": 80, "ordem_tocagem": 3 }
+    ]
+}
+

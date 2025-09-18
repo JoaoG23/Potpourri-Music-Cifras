@@ -11,39 +11,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
 
-
-# def search_music_by_url(url=None):
-#     try:
-#         # Fazendo a requisição
-#         response = requests.get(url)
-#         response.raise_for_status()  # Levanta exceção para códigos de erro HTTP
-#         html = response.text
-
-#         # Analisando o HTML
-#         soup = BeautifulSoup(html, "html.parser")
-
-#         # Extraindo o título da página
-#         titulo = soup.title.text if soup.title else "Título não encontrado"
-#         print("Título da página:", titulo)
-
-#         # Extraindo a cifra da tag <div>
-#         cifra = soup.find("div", class_="cifra_cnt")
-#         if not cifra:
-#             print("Cifra não encontrada.")
-#             return None
-        
-#         return {
-#             "titulo": titulo,
-#             "cifra": cifra.get_text()
-#         }
-        
-#     except requests.exceptions.RequestException as e:
-#         print(f"Erro na requisição HTTP: {str(e)}")
-#         return None
-#     except Exception as e:
-#         print(f"Erro inesperado: {str(e)}")
-#         return None
-
 def search_music_by_url(url):
     """Extrai a cifra usando Selenium para aguardar o carregamento do JavaScript"""
     
@@ -78,19 +45,20 @@ def search_music_by_url(url):
         soup = BeautifulSoup(html, "html.parser")
         
         # Extrai o título da página
-        titulo = soup.title.text
-        print("Título da página:", titulo)
+        titulo = soup.title.text if soup.title else "Título não encontrado"
         
         # Extrai a cifra
         cifra = soup.find("div", class_="cifra_cnt")
-        if cifra:
-            print("Cifra encontrada!")
-            print("Conteúdo da cifra:")
-            # print(cifra.get_text())
-            return cifra.get_text()
-        else:
-            print("Cifra não encontrada.")
+        
+        if not cifra:
+            print("Cifra não encontrada!")
             return None
+        
+        return {
+            "titulo": titulo,
+            "cifra": cifra.get_text()
+        }
+
             
     except Exception as e:
         print(f"Erro ao carregar a página: {e}")

@@ -171,3 +171,63 @@ class PotpourriService:
         except SQLAlchemyError as e:
             db.session.rollback()
             raise Exception(f"Erro ao criar potpourri com músicas: {str(e)}")
+
+
+    @staticmethod
+    def update_potpourri_and_replace_musics(potpourri_id: int, potpourri_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update potpourri (name optional) and replace all its musics with the provided list"""
+        try:
+            # Ensure potpourri exists
+            potpourri = Potpourri.query.get(potpourri_id)
+            if not potpourri:
+                raise Exception("Potpourri não encontrado")
+
+            # Optionally update name
+            if potpourri_data.get('nome_potpourri'):
+                potpourri.nome_potpourri = potpourri_data['nome_potpourri']
+
+            # Validate musics payload
+            if not potpourri_data.get('musicas_potpourri'):
+                raise Exception("Lista de músicas é obrigatória")
+            if not isinstance(potpourri_data.get('musicas_potpourri'), list):
+                raise Exception("musicas_potpourri deve ser uma lista")
+            if len(potpourri_data['musicas_potpourri']) == 0:
+                raise Exception("Lista de músicas não pode estar vazia")
+
+            PotpourriService._validate_musicas_potpourri_data(potpourri_data)
+
+            ordens = [m['ordem_tocagem'] for m in potpourri_data['musicas_potpourri']]
+            if len(ordens) != len(set(ordens)):
+                raise Exception("Ordens de tocagem devem ser únicas")
+
+            # Remove existing relations
+            existing = MusicasPotpourri.query.filter_by(potpourri_id=potpourri_id).all()
+            for rel in existing:
+                db.session.delete(rel)
+            db.session.flush()
+
+            # Add new relations (validate each music exists)
+            musicas_potpourri_list: List[MusicasPotpourri] = []
+            for musica_data in potpourri_data['musicas_potpourri']:
+                MusicasPotpourriService._vefify_if_exists_music(musica_data['musica_id'])
+
+                rel = MusicasPotpourri(
+                    potpourri_id=potpourri_id,
+                    musica_id=musica_data['musica_id'],
+                    ordem_tocagem=musica_data['ordem_tocagem']
+                )
+                db.session.add(rel)
+                musicas_potpourri_list.append(rel)
+
+            # Commit all changes as a single transaction
+            db.session.commit()
+
+            return {
+                'potpourri': potpourri.to_dict(),
+                'musicas_potpourri': [mp.to_dict() for mp in musicas_potpourri_list],
+                'total_musicas': len(musicas_potpourri_list)
+            }
+
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            raise Exception(f"Erro ao atualizar músicas do potpourri: {str(e)}")
