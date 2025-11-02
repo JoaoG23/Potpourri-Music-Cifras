@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Music, Plus, Trash2, ArrowUp, ArrowDown, Search, User } from "lucide-react";
+import { Music, Plus, Trash2, ArrowUp, ArrowDown, Search, User, Pencil } from "lucide-react";
 
 import {
   Card,
@@ -24,42 +24,100 @@ import {
 import { Loading } from "../../../components/custom/Loading";
 import { Error } from "../../../components/custom/Error";
 
-import { getMusicList, createPotpourriWithMusics } from "./api";
+import {
+  getMusicList,
+  getPotpourriById,
+  getPotpourriMusics,
+  replacePotpourriMusics,
+} from "./api";
 import type { Music as MusicType } from "../../../types/music";
 import type { MusicaPotpourri } from "../../../types/potpourri";
 import { toast } from "sonner";
 import { waitTimeAndNavigate } from "@/utils/waitTimeAndNavigate/waitTimeAndNavigate";
 
-export const AddPotpourri: React.FC = () => {
+export const UpdatePotpourri: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const potpourriId = useMemo(() => Number(id), [id]);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [potpourriName, setPotpourriName] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [selectedMusics, setSelectedMusics] = useState<MusicaPotpourri[]>([]);
-  // Cache local para manter os detalhes das músicas por ID,
-  // evitando que o nome/artista desapareçam quando o resultado da busca muda
   const [musicCache, setMusicCache] = useState<Record<number, MusicType>>({});
 
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms delay
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Buscar músicas disponíveis - só busca a partir de 3 caracteres
-  const shouldSearch = debouncedSearchTerm.length >= 3 || debouncedSearchTerm.length === 0;
-  const { data: musicData, isLoading: isLoadingMusics, error: musicError } = useQuery({
-    queryKey: ["musics", debouncedSearchTerm],
-    queryFn: () => getMusicList(1, 50, debouncedSearchTerm),
-    enabled: shouldSearch, // Só executa a query se tiver 3+ caracteres ou estiver vazio
+  // Initial data: potpourri details
+  const {
+    data: potpourriData,
+    isLoading: isLoadingPotpourri,
+    error: potpourriError,
+  } = useQuery({
+    queryKey: ["potpourri", potpourriId],
+    queryFn: () => getPotpourriById(potpourriId),
+    enabled: Number.isFinite(potpourriId) && potpourriId > 0,
   });
 
-  // Sempre que novos resultados de músicas chegarem, atualiza o cache local
+  // Initial data: potpourri musics
+  const {
+    data: potpourriMusics,
+    error: potpourriMusicsError,
+  } = useQuery({
+    queryKey: ["potpourri-musics", potpourriId],
+    queryFn: () => getPotpourriMusics(potpourriId, 1, 500),
+    enabled: Number.isFinite(potpourriId) && potpourriId > 0,
+  });
+
+  // Available musics for search
+  const shouldSearch = debouncedSearchTerm.length >= 3 || debouncedSearchTerm.length === 0;
+  const { data: musicData } = useQuery({
+    queryKey: ["musics", debouncedSearchTerm],
+    queryFn: () => getMusicList(1, 50, debouncedSearchTerm),
+    enabled: shouldSearch,
+  });
+
+  // Hydrate name and selected musics when data arrives
+  useEffect(() => {
+    if (potpourriData?.potpourri) {
+      setPotpourriName(potpourriData.potpourri.nome_potpourri);
+    }
+  }, [potpourriData]);
+
+  useEffect(() => {
+    if (potpourriMusics?.musicas_potpourri?.length) {
+      // Convert API response with details to our simplified selectedMusics structure
+      const items: MusicaPotpourri[] = potpourriMusics.musicas_potpourri
+        .sort((a, b) => a.ordem_tocagem - b.ordem_tocagem)
+        .map((item) => ({ musica_id: item.musica_id, ordem_tocagem: item.ordem_tocagem }));
+      setSelectedMusics(items);
+
+      // Populate music cache with names from response
+      const cache: Record<number, MusicType> = {};
+      for (const m of potpourriMusics.musicas_potpourri) {
+        cache[m.musica_id] = {
+          id: m.musica.id,
+          nome: m.musica.nome,
+          artista: m.musica.artista,
+          link_musica: m.musica.link_musica,
+          cifra: m.musica.cifra,
+          velocidade_rolamento: m.musica.velocidade_rolamento,
+          created_at: m.musica.created_at,
+          updated_at: m.musica.updated_at,
+        };
+      }
+      setMusicCache((prev) => ({ ...cache, ...prev }));
+    }
+  }, [potpourriMusics]);
+
+  // Update cache when search results arrive
   useEffect(() => {
     if (musicData?.musicas?.length) {
       setMusicCache((prev) => {
@@ -72,80 +130,83 @@ export const AddPotpourri: React.FC = () => {
     }
   }, [musicData]);
 
-  // Mutation para criar potpourri
-  const createPotpourriMutation = useMutation({
-    mutationFn: createPotpourriWithMusics,
+  const initialError = potpourriError || potpourriMusicsError;
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { nome_potpourri: string; musicas_potpourri: MusicaPotpourri[] }) =>
+      replacePotpourriMusics(potpourriId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["potpourris"] });
-      toast.success("Potpourri criado com sucesso");
+      queryClient.invalidateQueries({ queryKey: ["potpourri"] });
+      queryClient.invalidateQueries({ queryKey: ["potpourri-musics"] });
+      toast.success("Potpourri atualizado com sucesso");
       waitTimeAndNavigate(navigate, "/list-potpourris");
     },
   });
 
   const handleAddMusic = (music: MusicType) => {
+    // Avoid duplicates
+    if (selectedMusics.some((m) => m.musica_id === music.id)) return;
+
     const newOrder = selectedMusics.length + 1;
     const newMusicaPotpourri: MusicaPotpourri = {
       musica_id: music.id,
       ordem_tocagem: newOrder,
     };
-    
-    // Garante que os detalhes da música fiquem em cache
     setMusicCache((prev) => ({ ...prev, [music.id]: music }));
-    setSelectedMusics([...selectedMusics, newMusicaPotpourri]);
+    setSelectedMusics((prev) => [...prev, newMusicaPotpourri]);
   };
 
   const handleRemoveMusic = (musicaId: number) => {
     const updatedMusics = selectedMusics
-      .filter(m => m.musica_id !== musicaId)
+      .filter((m) => m.musica_id !== musicaId)
       .map((m, index) => ({ ...m, ordem_tocagem: index + 1 }));
-    
     setSelectedMusics(updatedMusics);
   };
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
-    
     const newMusics = [...selectedMusics];
     [newMusics[index - 1], newMusics[index]] = [newMusics[index], newMusics[index - 1]];
-    
-    const reorderedMusics = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
-    setSelectedMusics(reorderedMusics);
+    const reordered = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
+    setSelectedMusics(reordered);
   };
 
   const handleMoveDown = (index: number) => {
     if (index === selectedMusics.length - 1) return;
-    
     const newMusics = [...selectedMusics];
     [newMusics[index], newMusics[index + 1]] = [newMusics[index + 1], newMusics[index]];
-    
-    const reorderedMusics = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
-    setSelectedMusics(reorderedMusics);
+    const reordered = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
+    setSelectedMusics(reordered);
   };
+
+  const isMusicSelected = (musicId: number) => selectedMusics.some((m) => m.musica_id === musicId);
 
   const handleSubmit = () => {
     if (!potpourriName.trim()) {
       alert("Nome do potpourri é obrigatório");
       return;
     }
-    
     if (selectedMusics.length === 0) {
       alert("Selecione pelo menos uma música");
       return;
     }
-
-    createPotpourriMutation.mutate({
+    updateMutation.mutate({
       nome_potpourri: potpourriName,
       musicas_potpourri: selectedMusics,
     });
   };
 
-  const isMusicSelected = (musicId: number) => {
-    return selectedMusics.some(m => m.musica_id === musicId);
+ 
+
+  const getErrorMessage = (e: unknown): string => {
+    if (typeof e === "object" && e !== null && "message" in e) {
+      return String((e as { message?: string }).message || "Erro ao carregar dados");
+    }
+    return "Erro ao carregar dados";
   };
 
-
-  if (musicError) {
-    return <Error message={musicError?.message || ""} />;
+  if (initialError) {
+    return <Error message={getErrorMessage(initialError)} />;
   }
 
   return (
@@ -153,8 +214,8 @@ export const AddPotpourri: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Criar Novo Potpourri
+            <Pencil className="h-5 w-5" />
+            Editar Potpourri
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -183,9 +244,7 @@ export const AddPotpourri: React.FC = () => {
               />
             </div>
             {searchTerm.length > 0 && searchTerm.length < 3 && (
-              <p className="text-sm text-gray-500">
-                Digite pelo menos 3 caracteres para iniciar a busca
-              </p>
+              <p className="text-sm text-gray-500">Digite pelo menos 3 caracteres para iniciar a busca</p>
             )}
             {shouldSearch && debouncedSearchTerm.length > 0 && (
               <p className="text-sm text-gray-600">
@@ -204,9 +263,7 @@ export const AddPotpourri: React.FC = () => {
                 <div className="max-h-96 overflow-y-auto">
                   {!shouldSearch && searchTerm.length > 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">
-                        Digite pelo menos 3 caracteres para buscar músicas
-                      </p>
+                      <p className="text-gray-500">Digite pelo menos 3 caracteres para buscar músicas</p>
                     </div>
                   ) : (
                     <Table>
@@ -218,7 +275,8 @@ export const AddPotpourri: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {isLoadingMusics ? (
+                     
+                        {isLoadingPotpourri? (
                           <TableRow>
                             <TableCell colSpan={3} className="h-24">
                               <Loading />
@@ -255,16 +313,12 @@ export const AddPotpourri: React.FC = () => {
             {/* Músicas Selecionadas */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">
-                  Músicas Selecionadas ({selectedMusics.length})
-                </CardTitle>
+                <CardTitle className="text-lg">Músicas Selecionadas ({selectedMusics.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="max-h-96 overflow-y-auto">
                   {selectedMusics.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">
-                      Nenhuma música selecionada
-                    </p>
+                    <p className="text-gray-500 text-center py-8">Nenhuma música selecionada</p>
                   ) : (
                     <Table>
                       <TableHeader>
@@ -276,15 +330,11 @@ export const AddPotpourri: React.FC = () => {
                       </TableHeader>
                       <TableBody>
                         {selectedMusics.map((musicaPotpourri, index) => {
-                          // Busca primeiro no cache, com fallback nos dados carregados atualmente
-                          const music = musicCache[musicaPotpourri.musica_id] ||
-                                        musicData?.musicas?.find(m => m.id === musicaPotpourri.musica_id);
+                          const music = musicCache[musicaPotpourri.musica_id];
                           return (
                             <TableRow key={musicaPotpourri.musica_id}>
                               <TableCell>
-                                <Badge variant="secondary">
-                                  {musicaPotpourri.ordem_tocagem}
-                                </Badge>
+                                <Badge variant="secondary">{musicaPotpourri.ordem_tocagem}</Badge>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
@@ -294,12 +344,7 @@ export const AddPotpourri: React.FC = () => {
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleMoveUp(index)}
-                                    disabled={index === 0}
-                                  >
+                                  <Button size="sm" variant="outline" onClick={() => handleMoveUp(index)} disabled={index === 0}>
                                     <ArrowUp className="h-4 w-4" />
                                   </Button>
                                   <Button
@@ -310,11 +355,7 @@ export const AddPotpourri: React.FC = () => {
                                   >
                                     <ArrowDown className="h-4 w-4" />
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleRemoveMusic(musicaPotpourri.musica_id)}
-                                  >
+                                  <Button size="sm" variant="destructive" onClick={() => handleRemoveMusic(musicaPotpourri.musica_id)}>
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
@@ -332,17 +373,9 @@ export const AddPotpourri: React.FC = () => {
 
           {/* Botões de Ação */}
           <div className="flex justify-end gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/list-potpourris")}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createPotpourriMutation.isPending || !potpourriName.trim() || selectedMusics.length === 0}
-            >
-              {createPotpourriMutation.isPending ? "Criando..." : "Criar Potpourri"}
+            <Button variant="outline" onClick={() => navigate("/list-potpourris")}>Cancelar</Button>
+            <Button onClick={handleSubmit} disabled={updateMutation.isPending || !potpourriName.trim() || selectedMusics.length === 0}>
+              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </CardContent>

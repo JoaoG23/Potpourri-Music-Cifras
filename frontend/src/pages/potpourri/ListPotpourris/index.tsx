@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Music, Calendar, Clock, Plus, Eye, Trash2 } from "lucide-react";
+import { Music, Calendar, Clock, Plus, Eye, Trash2, Pencil, Search } from "lucide-react";
 
 import {
   Table,
@@ -25,21 +25,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-
+import { Input } from "../../../components/ui/input";
 import { Loading } from "../../../components/custom/Loading";
 import { Error } from "../../../components/custom/Error";
 import { Pagination } from "../../../components/custom/Pagination";
 
-import { getPotpourriList } from "./api";
+import { getPotpourriList, searchPotpourriList } from "./api";
 
 export const ListPotpourris: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const navigate = useNavigate();
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const shouldSearch = debouncedSearchTerm.length >= 3;
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["potpourris", page, perPage],
-    queryFn: () => getPotpourriList(page, perPage),
+    queryKey: ["potpourris", { page, perPage, debouncedSearchTerm }],
+    queryFn: () =>
+      shouldSearch
+        ? searchPotpourriList(debouncedSearchTerm, page, perPage)
+        : getPotpourriList(page, perPage),
     refetchOnWindowFocus: true,
   });
 
@@ -48,13 +64,15 @@ export const ListPotpourris: React.FC = () => {
     setPage(1);
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setPage(1);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
 
   if (error) {
     return <Error message={error?.message || ""} />;
@@ -79,6 +97,26 @@ export const ListPotpourris: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Search Input */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Pesquisar por potpourri (mín. 3 caracteres)..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            {shouldSearch && (
+              <p className="text-sm text-gray-600 mt-2">
+                Pesquisando por:{" "}
+                <span className="font-medium">"{debouncedSearchTerm}"</span>
+              </p>
+            )}
+          </div>
+
           {/* Controls */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -155,6 +193,17 @@ export const ListPotpourris: React.FC = () => {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
+                            navigate(`/update-potpourri/${potpourri.id}`);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
                             navigate(`/view-potpourri/${potpourri.id}`);
                           }}
                           className="h-8 w-8 p-0"
@@ -176,6 +225,7 @@ export const ListPotpourris: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {isLoading && <Loading />}
               </TableBody>
             </Table>
           </div>

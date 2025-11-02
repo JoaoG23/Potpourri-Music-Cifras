@@ -3,7 +3,12 @@ import type { MusicsResponse } from "../../../../types/music";
 import type { CreatePotpourriRequest, CreatePotpourriResponse } from "../../../../types/potpourri";
 
 export const getMusicList = async (page: number = 1, perPage: number = 50, search: string = ""): Promise<MusicsResponse> => {
-  const params: any = { page, per_page: perPage };
+  type Params = {
+    page: number;
+    per_page: number;
+    search?: string;
+  };
+  const params : Params = { page, per_page: perPage };
   if (search) {
     params.search = search;
   }

@@ -5,8 +5,8 @@ export const Loading: React.FC = () => {
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-2">
-          <Loader2 className="h-5 w-6 animate-spin" />
-          <span className="text-lg">Carregando músicas...</span>
+          <Loader2 className="h-10 w-10 animate-spin" />
+          <span className="text-lg">Carregando...</span>
         </div>
       </div>
     </div>

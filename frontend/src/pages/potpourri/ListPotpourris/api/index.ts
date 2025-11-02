@@ -7,3 +7,10 @@ export const getPotpourriList = async (page: number = 1, perPage: number = 10): 
   });
   return response.data;
 };
+
+export const searchPotpourriList = async (searchTerm: string, page: number = 1, perPage: number = 10): Promise<PotpourrisResponse> => {
+  const response = await api.get('/potpourri/search', {
+    params: { q: searchTerm, page, per_page: perPage }
+  });
+  return response.data;
+};

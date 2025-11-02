@@ -60,12 +60,14 @@ export const ListMusics: React.FC = () => {
   }, [searchTerm]);
 
   const shouldSearch = debouncedSearchTerm.length >= 3;
-  
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ["musics", page, perPage, debouncedSearchTerm],
-    queryFn: () => shouldSearch 
-      ? searchMusicList(debouncedSearchTerm, page, perPage)
-      : getMusicList(page, perPage),
+    queryKey: ["musics", { page, perPage, debouncedSearchTerm }],
+    queryFn: () =>
+      shouldSearch
+        ? searchMusicList(debouncedSearchTerm, page, perPage)
+        : getMusicList(page, perPage),
+    refetchOnWindowFocus: true,
   });
 
   const handlePerPageChange = (newPerPage: string) => {
@@ -78,17 +80,13 @@ export const ListMusics: React.FC = () => {
     setPage(1);
   };
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
   if (error) {
     return <Error message={error?.message || ""} />;
   }
   const existsMoreThanOnePage =
     data?.pagination?.pages && data?.pagination?.pages > 1;
 
-    const totalPages: number = data?.pagination?.pages || 1;
+  const totalPages: number = data?.pagination?.pages || 1;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -123,7 +121,8 @@ export const ListMusics: React.FC = () => {
             </div>
             {shouldSearch && (
               <p className="text-sm text-gray-600 mt-2">
-                Pesquisando por: <span className="font-medium">"{debouncedSearchTerm}"</span>
+                Pesquisando por:{" "}
+                <span className="font-medium">"{debouncedSearchTerm}"</span>
               </p>
             )}
           </div>
@@ -152,13 +151,14 @@ export const ListMusics: React.FC = () => {
               <div className="text-sm text-gray-600">
                 {shouldSearch ? (
                   <>
-                    {data?.pagination?.total} resultado(s) para "{debouncedSearchTerm}" • Página{" "}
-                    {data?.pagination?.page} de {data?.pagination?.pages}
+                    {data?.pagination?.total} resultado(s) para "
+                    {debouncedSearchTerm}" • Página {data?.pagination?.page} de{" "}
+                    {totalPages}
                   </>
                 ) : (
                   <>
                     {data?.pagination?.total} músicas • Página{" "}
-                    {data?.pagination?.page} de {data?.pagination?.pages}
+                    {data?.pagination?.page} de {totalPages}
                   </>
                 )}
               </div>
@@ -247,6 +247,7 @@ export const ListMusics: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {isLoading && <Loading />}
               </TableBody>
             </Table>
           </div>
