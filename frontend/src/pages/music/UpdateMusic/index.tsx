@@ -232,15 +232,14 @@ export const UpdateMusic: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
-      <Card>
+    <div className="container mx-auto p-1 lg:p-4 md:p-6 space-y-4 md:space-y-6">
+      <Card className="px-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MusicIcon className="h-5 w-5" />
               <span className="text-lg font-semibold">Editar Cifra</span>
             </div>
-            {/* <Badge variant="secondary">ID: {music.id}</Badge> */}
           </div>
           <div className="mt-2">
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">

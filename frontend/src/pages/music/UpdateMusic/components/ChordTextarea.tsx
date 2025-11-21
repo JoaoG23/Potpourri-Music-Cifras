@@ -84,13 +84,13 @@ export const ChordTextarea: React.FC<ChordTextareaProps> = ({
         onScroll={handleScroll}
         placeholder={placeholder}
         rows={rows}
-        className={`${className} ${showHighlight ? 'text-transparent' : ''}`}
+        className={`${className} text-xs lg:text-sm ${showHighlight ? 'text-transparent' : ''}`}
         style={showHighlight ? { color: 'transparent' } : {}}
       />
 
       {/* Botão para alternar destaque */}
       {hasChordsInText && (
-        <div className="absolute top-2 right-2 z-20">
+        <div className="absolute top-2 right-2 z-20 ">
           <button
             type="button"
             onClick={() => setShowHighlight(!showHighlight)}

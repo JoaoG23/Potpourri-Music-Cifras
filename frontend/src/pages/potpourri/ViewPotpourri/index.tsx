@@ -155,7 +155,7 @@ export const ViewPotpourri: React.FC = () => {
                 </div>
                 <div>
                   <strong>Cifra:</strong>
-                  <pre className="font-mono text-sm bg-gray-50 py-4 rounded-md mt-2 whitespace-pre-wrap">
+                  <pre className="font-mono text-[13px] bg-gray-50 py-4 rounded-md mt-2 whitespace-pre-wrap">
                     {processarLinha(music.musica.cifra)}
                   </pre>
                 </div>
