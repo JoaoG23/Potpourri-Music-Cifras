@@ -1,0 +1,53 @@
+import { Home } from "./screens/Home";
+import { Music } from "./screens/Music";
+import { Potpourri } from "./screens/Potpourri";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+
+const Tab = createBottomTabNavigator();
+
+const TAB_ICONS: Record<
+  string,
+  {
+    focused: keyof typeof Ionicons.glyphMap;
+    outline: keyof typeof Ionicons.glyphMap;
+  }
+> = {
+  Home: { focused: "home", outline: "home-outline" },
+  Music: { focused: "musical-notes", outline: "musical-notes-outline" },
+  Potpourri: { focused: "albums", outline: "albums-outline" },
+};
+
+export const AppRoutes = () => {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        initialRouteName="Home"
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ focused, color, size }) => {
+            const icons = TAB_ICONS[route.name];
+
+            if (!icons) {
+              return <Ionicons name="alert-circle" size={size} color={color} />;
+            }
+
+            return (
+              <Ionicons
+                name={focused ? icons.focused : icons.outline}
+                size={size}
+                color={color}
+              />
+            );
+          },
+          tabBarActiveTintColor: "tomato",
+          tabBarInactiveTintColor: "gray",
+        })}
+      >
+        <Tab.Screen name="Home" component={Home} />
+        <Tab.Screen name="Music" component={Music} />
+        <Tab.Screen name="Potpourri" component={Potpourri} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+};
