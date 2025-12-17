@@ -40,7 +40,7 @@ export const AppRoutes = () => {
               />
             );
           },
-          tabBarActiveTintColor: "tomato",
+          tabBarActiveTintColor: "#5856d6",
           tabBarInactiveTintColor: "gray",
         })}
       >
