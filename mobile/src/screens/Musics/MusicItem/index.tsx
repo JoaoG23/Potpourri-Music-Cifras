@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Musica } from "../types/musicasTypes";
 
 interface MusicItemProps {
@@ -24,21 +24,24 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 17 },
 });
 
-export const MusicItem = React.memo(({ item }: MusicItemProps) => (
-  <View style={styles.card}>
-    <View style={styles.info}>
-      <Text style={styles.nome}>{item.nome}</Text>
-      <Text style={styles.artista}>{item.artista}</Text>
-    </View>
+export const MusicItem = React.memo(({ item }: MusicItemProps) => {
+  const navigation = useNavigation<any>();
 
-    <View style={styles.actions}>
-      <TouchableOpacity onPress={() => console.log("Editar", item.id)}>
-        <Feather name="edit" size={23} color="#5f5f5fff" />
+  return (
+    <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.info}
+        onPress={() => navigation.navigate("EditMusic", { id: item.id })}
+      >
+        <Text style={styles.nome}>{item.nome}</Text>
+        <Text style={styles.artista}>{item.artista}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => console.log("Deletar", item.id)}>
-        <Feather name="trash" size={23} color="#bb4e48ff" />
-      </TouchableOpacity>
+      <View style={styles.actions}>
+        <TouchableOpacity onPress={() => console.log("Deletar", item.id)}>
+          <Feather name="trash" size={23} color="#bb4e48ff" />
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-));
+  );
+});

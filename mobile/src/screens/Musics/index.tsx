@@ -1,21 +1,21 @@
-import React from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
-  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useForm, useWatch } from "react-hook-form";
+
 import api from "../../services/api";
+
 import { Input } from "../../components/Input";
 import { MusicItem } from "./MusicItem";
+
 import { Musica } from "./types/musicasTypes";
 
-// Tipagem dos dados
 interface ApiResponse {
   musicas: Musica[];
   pagination: {
@@ -30,10 +30,10 @@ export const Musics = () => {
   });
 
   const searchWatch = useWatch({ control, name: "search" });
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   // Debounce da pesquisa para evitar re-renderizações e chamadas de API excessivas
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchWatch);
     }, 400);
@@ -73,15 +73,12 @@ export const Musics = () => {
 
   const musicas = data?.pages.flatMap((page) => page.data.musicas) || [];
 
-  const renderItem = React.useCallback(
+  const renderItem = useCallback(
     ({ item }: { item: Musica }) => <MusicItem item={item} />,
     []
   );
 
-  const keyExtractor = React.useCallback(
-    (item: Musica) => item.id.toString(),
-    []
-  );
+  const keyExtractor = useCallback((item: Musica) => item.id.toString(), []);
 
   return (
     <View style={styles.container}>
