@@ -15,8 +15,8 @@ const TAB_ICONS: Record<
   }
 > = {
   Home: { focused: "home", outline: "home-outline" },
-  Music: { focused: "musical-notes", outline: "musical-notes-outline" },
-  Potpourri: { focused: "albums", outline: "albums-outline" },
+  Musicas: { focused: "musical-notes", outline: "musical-notes-outline" },
+  Potpourris: { focused: "albums", outline: "albums-outline" },
 };
 
 export const AppRoutes = () => {
@@ -45,8 +45,8 @@ export const AppRoutes = () => {
         })}
       >
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Music" component={Musics} />
-        <Tab.Screen name="Potpourri" component={Potpourris} />
+        <Tab.Screen name="Musicas" component={Musics} />
+        <Tab.Screen name="Potpourris" component={Potpourris} />
       </Tab.Navigator>
     </NavigationContainer>
   );

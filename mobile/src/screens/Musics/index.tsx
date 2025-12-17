@@ -8,18 +8,14 @@ import {
   StyleSheet,
 } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 import { useForm, useWatch } from "react-hook-form";
 import api from "../../services/api";
 import { Input } from "../../components/Input";
+import { MusicItem } from "./MusicItem";
+import { Musica } from "./types/musicasTypes";
 
 // Tipagem dos dados
-interface Musica {
-  id: number;
-  nome: string;
-  artista: string;
-}
-
 interface ApiResponse {
   musicas: Musica[];
   pagination: {
@@ -30,17 +26,21 @@ interface ApiResponse {
 
 export const Musics = () => {
   const { control } = useForm({
-    defaultValues: {
-      search: "",
-    },
+    defaultValues: { search: "" },
   });
 
-  const search = useWatch({
-    control,
-    name: "search",
-  });
+  const searchWatch = useWatch({ control, name: "search" });
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
-  // 1. Busca infinita
+  // Debounce da pesquisa para evitar re-renderizações e chamadas de API excessivas
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchWatch);
+    }, 400);
+
+    return () => clearTimeout(handler);
+  }, [searchWatch]);
+
   const {
     data,
     fetchNextPage,
@@ -49,15 +49,15 @@ export const Musics = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["musicas", search],
+    queryKey: ["musicas", debouncedSearch],
     queryFn: async ({ pageParam = 1 }) => {
-      const endpoint = search ? `musicas/search` : `musicas`;
+      const endpoint = debouncedSearch ? `musicas/search` : `musicas`;
       const params = new URLSearchParams({
         page: pageParam.toString(),
-        per_page: "10",
+        per_page: "15", // Aumentado ligeiramente para preencher melhor a tela
       });
 
-      if (search) params.append("q", search);
+      if (debouncedSearch) params.append("q", debouncedSearch);
 
       const response = await api.get<ApiResponse>(
         `${endpoint}?${params.toString()}`
@@ -71,10 +71,17 @@ export const Musics = () => {
         : null,
   });
 
-  // Achata as páginas em um único array
   const musicas = data?.pages.flatMap((page) => page.data.musicas) || [];
 
-  const color = "#5f5f5fff";
+  const renderItem = React.useCallback(
+    ({ item }: { item: Musica }) => <MusicItem item={item} />,
+    []
+  );
+
+  const keyExtractor = React.useCallback(
+    (item: Musica) => item.id.toString(),
+    []
+  );
 
   return (
     <View style={styles.container}>
@@ -94,36 +101,24 @@ export const Musics = () => {
       ) : (
         <FlatList
           data={musicas}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.info}>
-                <Text style={styles.nome}>{item.nome}</Text>
-                <Text style={styles.artista}>{item.artista}</Text>
-              </View>
-
-              <View style={styles.actions}>
-                <TouchableOpacity
-                  onPress={() => console.log("Editar", item.id)}
-                >
-                  <MaterialIcons name="edit" size={20} color={color} />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => console.log("Deletar", item.id)}
-                >
-                  <MaterialIcons name="delete" size={20} color={color} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-          // Scroll Infinito
-          onEndReached={() => {
-            if (hasNextPage) fetchNextPage();
-          }}
-          onEndReachedThreshold={0.5}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          onEndReached={() => hasNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.4}
+          // Otimizações de performance
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+          getItemLayout={(_data, index) => ({
+            length: 73,
+            offset: 73 * index,
+            index,
+          })}
           ListFooterComponent={
-            isFetchingNextPage ? <ActivityIndicator color="#000" /> : null
+            isFetchingNextPage ? (
+              <ActivityIndicator color="#000" style={{ marginVertical: 20 }} />
+            ) : null
           }
         />
       )}
@@ -135,17 +130,4 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   header: { padding: 15, paddingBottom: 0 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  card: {
-    flexDirection: "row",
-    padding: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  info: { flex: 1 },
-  nome: { fontSize: 16, fontWeight: "bold" },
-  artista: { fontSize: 14, color: "#666" },
-  actions: { flexDirection: "row", gap: 15 },
 });
