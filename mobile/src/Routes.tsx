@@ -1,6 +1,6 @@
 import { Home } from "./screens/Home";
-import { Music } from "./screens/Music";
-import { Potpourri } from "./screens/Potpourri";
+import { Musics } from "./screens/Musics";
+import { Potpourris } from "./screens/Potpourris";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,8 +45,8 @@ export const AppRoutes = () => {
         })}
       >
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Music" component={Music} />
-        <Tab.Screen name="Potpourri" component={Potpourri} />
+        <Tab.Screen name="Music" component={Musics} />
+        <Tab.Screen name="Potpourri" component={Potpourris} />
       </Tab.Navigator>
     </NavigationContainer>
   );

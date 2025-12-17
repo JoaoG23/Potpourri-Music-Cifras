@@ -1,9 +1,9 @@
 import { Text, View } from "react-native";
 
-export const Potpourri = () => {
+export const Potpourris = () => {
   return (
     <View>
-      <Text>Potpourri</Text>
+      <Text>Potpourris</Text>
     </View>
   );
 };
