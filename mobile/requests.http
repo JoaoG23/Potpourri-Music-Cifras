@@ -2,11 +2,11 @@
 
 
 ### Criar uma música
-POST http://localhost:3004/api/musicas
+POST http://localhost:5000/api/musicas
 Content-Type: application/json
 
 {
-    "link_musica": "https://www.cifraclub.com.br/fagner/espumas-ao-vento/"
+    "link_musica": "https://www.cifraclub.com.br/air-supply/all-out-of-love/"
 }
 
 
@@ -35,7 +35,7 @@ Content-Type: application/json
 
 
 ### Deletar música
-DELETE http://localhost:3004/api/musicas/8
+DELETE http://localhost:3004/api/musicas/445
 
 
 ##### Potpourri #####

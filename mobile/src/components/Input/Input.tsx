@@ -16,6 +16,7 @@ interface Props extends TextInputProps {
   label?: string;
   error?: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  required?: boolean | string;
 }
 
 export const Input = ({
@@ -26,14 +27,28 @@ export const Input = ({
   icon,
   onBlur,
   onFocus,
+  required,
   ...rest
 }: Props) => {
   const [isFocused, setIsFocused] = useState(false);
   const {
     field: { value, onChange, onBlur: fieldOnBlur },
-  } = useController({ name, control, defaultValue: "" });
+    fieldState: { error: fieldError },
+  } = useController({
+    name,
+    control,
+    defaultValue: "",
+    rules: {
+      required: required === true ? "Este campo é obrigatório" : required,
+    },
+  });
 
-  const iconColor = error ? "#ff3b30" : isFocused ? "#5856d6" : "#8e8e93";
+  const errorMessage = error || fieldError?.message;
+  const iconColor = errorMessage
+    ? "#ff3b30"
+    : isFocused
+    ? "#5856d6"
+    : "#8e8e93";
 
   return (
     <View style={styles.container}>
@@ -43,7 +58,7 @@ export const Input = ({
         style={[
           styles.inputGroup,
           isFocused && styles.focused,
-          !!error && styles.error,
+          !!errorMessage && styles.error,
         ]}
       >
         {icon && (
@@ -79,7 +94,7 @@ export const Input = ({
         )}
       </View>
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
     </View>
   );
 };

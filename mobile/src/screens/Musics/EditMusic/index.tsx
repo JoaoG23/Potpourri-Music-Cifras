@@ -86,7 +86,7 @@ export const EditMusic = () => {
     }
   }, [musicaData, reset, setSpeed]);
 
-  const { mutateAsync: editMutateMusic } = useMutation({
+  const { mutateAsync: editMutateMusic, isPending } = useMutation({
     mutationFn: async (musicaEdit: MusicaEdit) => {
       const response = await api.put(`/musicas/${id}`, musicaEdit);
       return response;
@@ -109,7 +109,7 @@ export const EditMusic = () => {
 
   const musica: MusicaDetalhe = musicaData?.data.musica || {};
 
-  if (isLoading) {
+  if (isLoading || isPending) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#5856d6" />
