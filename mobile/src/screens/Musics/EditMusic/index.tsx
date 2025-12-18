@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,14 +8,16 @@ import {
   TouchableOpacity,
   Linking,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "../../../services/api";
 import { Musica } from "../types/musicasTypes";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { FloatingScrollControls } from "../../../components/FloatingScrollControls";
 import { useAutoScroll } from "../../../helpers/autoScroll/useAutoScroll";
+import { useForm, Controller } from "react-hook-form";
 
 interface MusicaDetalhe extends Musica {
   link_musica?: string;
@@ -23,11 +25,30 @@ interface MusicaDetalhe extends Musica {
   velocidade_rolamento?: number;
 }
 
+interface MusicaEdit {
+  nome: string;
+  artista: string;
+  link_musica: string;
+  cifra: string;
+  velocidade_rolamento: number;
+}
+
 export const EditMusic = () => {
   const route = useRoute<any>();
   const { id } = route.params || {};
   const [isPreview, setIsPreview] = useState(true);
-  const [cifraText, setCifraText] = useState("");
+
+  const { control, handleSubmit, reset, watch } = useForm<MusicaEdit>({
+    defaultValues: {
+      nome: "",
+      artista: "",
+      link_musica: "",
+      cifra: "",
+      velocidade_rolamento: 1.0,
+    },
+  });
+
+  const cifraWatch = watch("cifra");
 
   const scrollViewRef = useRef<ScrollView>(null);
   const { isPlaying, speed, setSpeed, togglePlay, handleScroll } =
@@ -42,11 +63,36 @@ export const EditMusic = () => {
     queryKey: ["musica", id],
     queryFn: async () => {
       const response = await api.get(`/musicas/${id}`);
-      const data = response.data.musica;
-      if (data?.cifra) setCifraText(data.cifra);
       return response;
     },
     enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (musicaData?.data.musica) {
+      const m = musicaData.data.musica;
+      reset({
+        nome: m.nome,
+        artista: m.artista,
+        link_musica: m.link_musica || "",
+        cifra: m.cifra || "",
+        velocidade_rolamento: m.velocidade_rolamento || 1.0,
+      });
+      setSpeed(m.velocidade_rolamento || 1.0);
+    }
+  }, [musicaData, reset, setSpeed]);
+
+  const { mutateAsync: editMutateMusic } = useMutation({
+    mutationFn: async (musicaEdit: MusicaEdit) => {
+      const response = await api.put(`/musicas/${id}`, musicaEdit);
+      return response;
+    },
+    onSuccess: () => {
+      Alert.alert("Sucesso", "Música editada com sucesso!");
+    },
+    onError: (error) => {
+      Alert.alert("Erro", error.message);
+    },
   });
 
   const musica: MusicaDetalhe = musicaData?.data.musica || {};
@@ -89,10 +135,10 @@ export const EditMusic = () => {
           )}
 
           <TouchableOpacity
-            style={[styles.linkButton, { marginLeft: 10 }]}
+            style={[styles.editButton, { marginLeft: 10 }]}
             onPress={() => setIsPreview(!isPreview)}
           >
-            <Text style={styles.linkText}>
+            <Text style={styles.editText}>
               {isPreview ? "Editar Cifra" : "Ver Colorido"}
             </Text>
           </TouchableOpacity>
@@ -101,16 +147,23 @@ export const EditMusic = () => {
         <View style={styles.textareaContainer}>
           {isPreview ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View>{colorirCifras(cifraText)}</View>
+              <View>{colorirCifras(cifraWatch)}</View>
             </ScrollView>
           ) : (
-            <TextInput
-              style={[styles.textarea, { minHeight: 400 }]}
-              multiline
-              placeholder="Insira a cifra aqui..."
-              value={cifraText}
-              onChangeText={setCifraText}
-              textAlignVertical="top"
+            <Controller
+              control={control}
+              name="cifra"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.textarea, { minHeight: 400 }]}
+                  multiline
+                  placeholder="Insira a cifra aqui..."
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  textAlignVertical="top"
+                />
+              )}
             />
           )}
         </View>
@@ -121,6 +174,9 @@ export const EditMusic = () => {
         onPlayPause={togglePlay}
         speed={speed}
         onSpeedChange={setSpeed}
+        onSubmit={handleSubmit((data) =>
+          editMutateMusic({ ...data, velocidade_rolamento: speed })
+        )}
       />
     </View>
   );
@@ -158,13 +214,23 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   linkButton: {
-    backgroundColor: "#f7f2f2ff",
+    backgroundColor: "#fc8f36ff",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
   },
   linkText: {
-    color: "#5856d6",
+    color: "#fff",
+    fontWeight: "600",
+  },
+  editButton: {
+    backgroundColor: "#5856d6",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  editText: {
+    color: "#fff",
     fontWeight: "600",
   },
   textareaContainer: {

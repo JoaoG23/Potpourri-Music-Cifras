@@ -13,6 +13,7 @@ interface FloatingScrollControlsProps {
   onPlayPause: () => void;
   speed: number;
   onSpeedChange: (newSpeed: number) => void;
+  onSubmit: () => void;
 }
 
 export const FloatingScrollControls = ({
@@ -20,6 +21,7 @@ export const FloatingScrollControls = ({
   onPlayPause,
   speed,
   onSpeedChange,
+  onSubmit,
 }: FloatingScrollControlsProps) => {
   const increaseSpeed = () => {
     if (speed < 5) onSpeedChange(parseFloat((speed + 0.5).toFixed(1)));
@@ -30,29 +32,40 @@ export const FloatingScrollControls = ({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.controlsRow}>
-        <TouchableOpacity style={styles.button} onPress={decreaseSpeed}>
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
+    <View style={styles.containerPosition}>
+      <View style={styles.container}>
+        <View style={styles.controlsRow}>
+          <TouchableOpacity style={styles.button} onPress={decreaseSpeed}>
+            <Ionicons name="remove" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        <View style={styles.speedDisplay}>
-          <Text style={styles.speedText}>{speed.toFixed(1)}x</Text>
+          <View style={styles.speedDisplay}>
+            <Text style={styles.speedText}>{speed.toFixed(1)}x</Text>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={increaseSpeed}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.playButton,
+              isPlaying && styles.stopButton,
+            ]}
+            onPress={onPlayPause}
+          >
+            <Ionicons
+              name={isPlaying ? "pause" : "play"}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.button} onPress={increaseSpeed}>
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.playButton,
-            isPlaying && styles.stopButton,
-          ]}
-          onPress={onPlayPause}
-        >
-          <Text style={styles.buttonText}>{isPlaying ? "Stop" : "Play"}</Text>
+      </View>
+      <View>
+        <TouchableOpacity style={styles.buttonSave} onPress={onSubmit}>
+          <Ionicons name="save-outline" size={20} color="#f1f1f1ff" />{""}
         </TouchableOpacity>
       </View>
     </View>
@@ -60,20 +73,38 @@ export const FloatingScrollControls = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  buttonSave: {
+    backgroundColor: "#5856d6",
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginLeft: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textSave: {
+    color: "#f1f1f1ff",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  containerPosition: {
     position: "absolute",
     bottom: 40,
     alignSelf: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.48)",
-    padding: 12,
-    borderRadius: 30,
     flexDirection: "row",
     alignItems: "center",
+  },
+  container: {
+    backgroundColor: "rgba(156, 156, 156, 0.39)",
+    padding: 9,
+    borderRadius: 30,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 5,
       },
       android: {
@@ -109,11 +140,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   playButton: {
-    backgroundColor: "#1baf6aff",
+    backgroundColor: "#5856d6",
     width: 60,
     marginLeft: 10,
   },
   stopButton: {
-    backgroundColor: "#bd3129ff",
+    backgroundColor: "#D65D56",
   },
 });
