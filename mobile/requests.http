@@ -106,7 +106,8 @@ GET http://localhost:3004/api/musicas-potpourri/?page=1&per_page=10
 GET http://localhost:3004/api/musicas-potpourri/2
 
 ### Buscar músicas de um potpourri específico
-GET http://localhost:5000/api/musicas-potpourri/by-potpourri/2?page=1&per_page=10
+GET http://localhost:5000/api/musicas-potpourri/by-potpourri/8?page=1&per_page=2
+
 
 ### Atualizar relacionamento música-potpourri
 PUT http://localhost:5000/api/musicas-potpourri/1

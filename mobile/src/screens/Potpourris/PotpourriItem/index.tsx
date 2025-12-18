@@ -31,7 +31,12 @@ export const PotpourriItem = React.memo(({ item }: PotpourriItemProps) => {
     <View style={styles.card}>
       <TouchableOpacity
         style={styles.info}
-        onPress={() => console.log("Ver Potpourri", item.id)}
+        onPress={() =>
+          navigation.navigate("ViewPotpourri", {
+            id: item.id,
+            nome: item.nome_potpourri,
+          })
+        }
       >
         <Text style={styles.nome}>{item.nome_potpourri}</Text>
       </TouchableOpacity>

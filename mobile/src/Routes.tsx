@@ -9,7 +9,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Home } from "./screens/Home";
 import { Musics } from "./screens/Musics/ListMusics";
 import { EditMusic } from "./screens/Musics/EditMusic";
-import { Potpourris, RemovePotpourri } from "./screens/Potpourris";
+import {
+  Potpourris,
+  RemovePotpourri,
+  ViewPotpourri,
+} from "./screens/Potpourris";
 
 import { AddMusic } from "./screens/Musics/AddMusic";
 
@@ -24,6 +28,7 @@ type TScreenDefinition = {
   AddMusic: undefined;
   RemoveMusic: { id: number; nome: string };
   RemovePotpourri: { id: number; nome: string };
+  ViewPotpourri: { id: number; nome: string };
 };
 
 const Tab = createBottomTabNavigator<TScreenDefinition>();
@@ -108,6 +113,15 @@ export const AppRoutes = () => {
           options={{
             headerShown: false,
             title: "Remover Potpourri",
+            headerTintColor: "#5856D6",
+          }}
+        />
+        <Stack.Screen
+          name="ViewPotpourri"
+          component={ViewPotpourri}
+          options={{
+            headerShown: true,
+            title: "Visualizar Potpourri",
             headerTintColor: "#5856D6",
           }}
         />
