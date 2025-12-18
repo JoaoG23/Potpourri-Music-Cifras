@@ -18,7 +18,7 @@ import api from "../../../services/api";
 import { Musica } from "../types/musicasTypes";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { FloatingScrollControls } from "./components/FloatingScrollControls";
-import { useAutoScroll } from "../../../helpers/autoScroll/useAutoScroll";
+import { useAutoScroll } from "../../../hooks/useAutoScroll/useAutoScroll";
 import { Title } from "../../../components/Title";
 import { Subtitle } from "../../../components/Subtitle";
 

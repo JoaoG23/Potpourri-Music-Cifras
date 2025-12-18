@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
@@ -49,7 +49,7 @@ export const RemoveMusic = () => {
 
       <View style={styles.buttonContainer}>
         {isPending ? (
-          <ActivityIndicator size="large" color="#FF3B30" />
+          <ActivityIndicator size="large" color="#D65D56" />
         ) : (
           <>
             <View style={styles.buttonWrapper}>

@@ -10,7 +10,7 @@ export const Button = ({ onPress, title, variant = "success" }: Props) => {
   const getBackgroundColor = () => {
     switch (variant) {
       case "danger":
-        return "#FF3B30";
+        return "#D65D56";
       case "neutral":
         return "#8E8E93";
       case "success":
