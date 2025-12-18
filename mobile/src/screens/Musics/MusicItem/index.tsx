@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Musica } from "../types/musicasTypes";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 interface MusicItemProps {
   item: Musica;
@@ -24,8 +25,12 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 17 },
 });
 
+type TNativeStackNavigationProp = NativeStackNavigationProp<
+  Record<string, any>
+>;
+
 export const MusicItem = React.memo(({ item }: MusicItemProps) => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<TNativeStackNavigationProp>();
 
   return (
     <View style={styles.card}>
