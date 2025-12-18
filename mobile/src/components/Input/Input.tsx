@@ -104,8 +104,8 @@ const styles = StyleSheet.create({
     height: 52,
   },
   focused: { borderColor: "#5856d6", backgroundColor: "#fff" },
-  error: { borderColor: "#ff3b30", backgroundColor: "#fff" },
+  error: { borderColor: "#D65D56", backgroundColor: "#fff" },
   icon: { marginRight: 10 },
   field: { flex: 1, fontSize: 16, color: "#1c1c1e" },
-  errorText: { fontSize: 12, color: "#ff3b30", marginTop: 4, marginLeft: 4 },
+  errorText: { fontSize: 12, color: "#D65D56", marginTop: 4, marginLeft: 4 },
 });

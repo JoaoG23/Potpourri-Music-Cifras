@@ -19,6 +19,8 @@ import { Musica } from "../types/musicasTypes";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { FloatingScrollControls } from "./components/FloatingScrollControls";
 import { useAutoScroll } from "../../../helpers/autoScroll/useAutoScroll";
+import { Title } from "../../../components/Title";
+import { Subtitle } from "../../../components/Subtitle";
 
 interface MusicaDetalhe extends Musica {
   link_musica?: string;
@@ -131,8 +133,8 @@ export const EditMusic = () => {
         scrollEventThrottle={16}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.title}>{musica.nome}</Text>
-        <Text style={styles.artist}>{musica.artista}</Text>
+        <Title title={musica.nome} />
+        <Subtitle title={musica.artista} />
 
         <View style={styles.buttonRow}>
           {musica.link_musica && (

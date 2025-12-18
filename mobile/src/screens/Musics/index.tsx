@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import api from "../../services/api";
 
-import { Input } from "../../components/Input";
+import { Input } from "../../components/Input/Input";
 import { MusicItem } from "./MusicItem";
 
 import { Musica } from "./types/musicasTypes";
