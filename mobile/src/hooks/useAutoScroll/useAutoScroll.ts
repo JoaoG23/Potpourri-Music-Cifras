@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ScrollView } from "react-native";
 
-export const useAutoScroll = (
-  scrollRef: React.RefObject<ScrollView | null>
-) => {
+export const useAutoScroll = (scrollRef: React.RefObject<any>) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1.0);
   const scrollY = useRef(0);
@@ -29,10 +27,17 @@ export const useAutoScroll = (
 
     intervalRef.current = setInterval(() => {
       scrollY.current += step;
-      scrollRef.current?.scrollTo({
-        y: scrollY.current,
-        animated: true,
-      });
+      if (scrollRef.current?.scrollToOffset) {
+        scrollRef.current.scrollToOffset({
+          offset: scrollY.current,
+          animated: true,
+        });
+      } else if (scrollRef.current?.scrollTo) {
+        scrollRef.current.scrollTo({
+          y: scrollY.current,
+          animated: true,
+        });
+      }
     }, interval);
   }, [speed, stopScrolling, scrollRef]);
 
