@@ -1,14 +1,16 @@
-import { Home } from "./screens/Home";
-import { Musics } from "./screens/Musics";
-import { EditMusic } from "./screens/Musics/EditMusic";
-import { Potpourris } from "./screens/Potpourris";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
 import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
 } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+
+import { Home } from "./screens/Home";
+import { Musics } from "./screens/Musics/ListMusics";
+import { EditMusic } from "./screens/Musics/EditMusic";
+import { Potpourris, RemovePotpourri } from "./screens/Potpourris";
+
 import { AddMusic } from "./screens/Musics/AddMusic";
 
 import { RemoveMusic } from "./screens/Musics/RemoveMusic";
@@ -21,6 +23,7 @@ type TScreenDefinition = {
   EditMusic: { id: number };
   AddMusic: undefined;
   RemoveMusic: { id: number; nome: string };
+  RemovePotpourri: { id: number; nome: string };
 };
 
 const Tab = createBottomTabNavigator<TScreenDefinition>();
@@ -96,6 +99,15 @@ export const AppRoutes = () => {
           options={{
             headerShown: false,
             title: "Remover Música",
+            headerTintColor: "#5856D6",
+          }}
+        />
+        <Stack.Screen
+          name="RemovePotpourri"
+          component={RemovePotpourri}
+          options={{
+            headerShown: false,
+            title: "Remover Potpourri",
             headerTintColor: "#5856D6",
           }}
         />

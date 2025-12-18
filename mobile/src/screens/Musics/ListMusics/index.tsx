@@ -10,14 +10,14 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
 
-import api from "../../services/api";
+import api from "../../../services/api";
 
-import { Input } from "../../components/Input/Input";
-import { MusicItem } from "./MusicItem";
+import { Input } from "../../../components/Input/Input";
+import { MusicItem } from "../MusicItem";
 
-import { Musica } from "./types/musicasTypes";
-import { ButtonFloating } from "./ListMusics/components/ButtonFloating";
-import { TNavigationScreenProps } from "../../Routes";
+import { Musica } from "../types/musicasTypes";
+import { ButtonFloating } from "./components/ButtonFloating";
+import { TNavigationScreenProps } from "../../../Routes";
 
 interface ApiResponse {
   musicas: Musica[];
