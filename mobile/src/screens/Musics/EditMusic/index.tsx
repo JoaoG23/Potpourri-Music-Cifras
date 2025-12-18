@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../../../services/api";
 import { Musica } from "../types/musicasTypes";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
+import { FloatingScrollControls } from "../../../components/FloatingScrollControls";
+import { useAutoScroll } from "../../../helpers/autoScroll/useAutoScroll";
 
 interface MusicaDetalhe extends Musica {
   link_musica?: string;
@@ -26,6 +28,10 @@ export const EditMusic = () => {
   const { id } = route.params || {};
   const [isPreview, setIsPreview] = useState(true);
   const [cifraText, setCifraText] = useState("");
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const { isPlaying, speed, setSpeed, togglePlay, handleScroll } =
+    useAutoScroll(scrollViewRef);
 
   const {
     data: musicaData,
@@ -62,47 +68,61 @@ export const EditMusic = () => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{musica.nome}</Text>
-      <Text style={styles.artist}>{musica.artista}</Text>
+    <View style={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.content}
+      >
+        <Text style={styles.title}>{musica.nome}</Text>
+        <Text style={styles.artist}>{musica.artista}</Text>
 
-      <View style={styles.buttonRow}>
-        {musica.link_musica && (
+        <View style={styles.buttonRow}>
+          {musica.link_musica && (
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => Linking.openURL(musica.link_musica!)}
+            >
+              <Text style={styles.linkText}>Ver cifra original</Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => Linking.openURL(musica.link_musica!)}
+            style={[styles.linkButton, { marginLeft: 10 }]}
+            onPress={() => setIsPreview(!isPreview)}
           >
-            <Text style={styles.linkText}>Ver cifra original</Text>
+            <Text style={styles.linkText}>
+              {isPreview ? "Editar Cifra" : "Ver Colorido"}
+            </Text>
           </TouchableOpacity>
-        )}
+        </View>
 
-        <TouchableOpacity
-          style={[styles.linkButton, { marginLeft: 10 }]}
-          onPress={() => setIsPreview(!isPreview)}
-        >
-          <Text style={styles.linkText}>
-            {isPreview ? "Editar Cifra" : "Ver Colorido"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.textareaContainer}>
+          {isPreview ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View>{colorirCifras(cifraText)}</View>
+            </ScrollView>
+          ) : (
+            <TextInput
+              style={[styles.textarea, { minHeight: 400 }]}
+              multiline
+              placeholder="Insira a cifra aqui..."
+              value={cifraText}
+              onChangeText={setCifraText}
+              textAlignVertical="top"
+            />
+          )}
+        </View>
+      </ScrollView>
 
-      <View style={styles.textareaContainer}>
-        {isPreview ? (
-          <ScrollView horizontal>
-            <View>{colorirCifras(cifraText)}</View>
-          </ScrollView>
-        ) : (
-          <TextInput
-            style={[styles.textarea, { minHeight: 400 }]}
-            multiline
-            placeholder="Insira a cifra aqui..."
-            value={cifraText}
-            onChangeText={setCifraText}
-            textAlignVertical="top"
-          />
-        )}
-      </View>
-    </ScrollView>
+      <FloatingScrollControls
+        isPlaying={isPlaying}
+        onPlayPause={togglePlay}
+        speed={speed}
+        onSpeedChange={setSpeed}
+      />
+    </View>
   );
 };
 
@@ -114,6 +134,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     alignItems: "flex-start",
+    paddingBottom: 100, // Espaço para não cobrir o conteúdo final com o botão flutuante
   },
   center: {
     flex: 1,
