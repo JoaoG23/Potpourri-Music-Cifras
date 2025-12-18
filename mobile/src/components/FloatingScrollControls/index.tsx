@@ -65,7 +65,8 @@ export const FloatingScrollControls = ({
       </View>
       <View>
         <TouchableOpacity style={styles.buttonSave} onPress={onSubmit}>
-          <Ionicons name="save-outline" size={20} color="#f1f1f1ff" />{""}
+          <Ionicons name="save-outline" size={20} color="#f1f1f1ff" />
+          {""}
         </TouchableOpacity>
       </View>
     </View>

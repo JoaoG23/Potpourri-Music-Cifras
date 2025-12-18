@@ -59,7 +59,6 @@ export const AppRoutes = () => {
           name="EditMusic"
           component={EditMusic}
           options={{
-            presentation: "modal",
             headerShown: true,
             title: "Editar Música",
             headerTintColor: "#5856d6",

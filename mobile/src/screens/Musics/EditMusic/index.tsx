@@ -8,16 +8,17 @@ import {
   TouchableOpacity,
   Linking,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useForm, Controller } from "react-hook-form";
+import Toast from "react-native-toast-message";
+
 import api from "../../../services/api";
 import { Musica } from "../types/musicasTypes";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { FloatingScrollControls } from "../../../components/FloatingScrollControls";
 import { useAutoScroll } from "../../../helpers/autoScroll/useAutoScroll";
-import { useForm, Controller } from "react-hook-form";
 
 interface MusicaDetalhe extends Musica {
   link_musica?: string;
@@ -35,6 +36,7 @@ interface MusicaEdit {
 
 export const EditMusic = () => {
   const route = useRoute<any>();
+
   const { id } = route.params || {};
   const [isPreview, setIsPreview] = useState(true);
 
@@ -88,10 +90,18 @@ export const EditMusic = () => {
       return response;
     },
     onSuccess: () => {
-      Alert.alert("Sucesso", "Música editada com sucesso!");
+      Toast.show({
+        type: "success",
+        text1: "Sucesso",
+        text2: "Música editada com sucesso!",
+      });
     },
     onError: (error) => {
-      Alert.alert("Erro", error.message);
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: error.message,
+      });
     },
   });
 
