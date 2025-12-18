@@ -1,16 +1,17 @@
 import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { useForm } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+import { useMutation } from "@tanstack/react-query";
+import React from "react";
 
 import { Title } from "../../../components/Title";
 import { Subtitle } from "../../../components/Subtitle";
 import { Input } from "../../../components/Input/Input";
 import { Button } from "../../../components/Button";
-import Toast from "react-native-toast-message";
-import { useMutation } from "@tanstack/react-query";
+
 import api from "../../../services/api";
 import { TNavigationScreenProps } from "../../../Routes";
-import React from "react";
 
 interface MusicSaved {
   link_musica: string;
@@ -39,7 +40,7 @@ export const AddMusic = () => {
       });
 
       if (id) {
-        navigation.navigate("EditMusic", { id: String(id) });
+        navigation.navigate("EditMusic", { id: id });
       }
     },
     onError: (error: any) => {

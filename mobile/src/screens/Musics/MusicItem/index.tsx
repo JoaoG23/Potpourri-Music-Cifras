@@ -25,12 +25,13 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 17 },
 });
 
-type TNativeStackNavigationProp = NativeStackNavigationProp<
-  Record<string, any>
->;
+// type TNativeStackNavigationProp = NativeStackNavigationProp<
+//   Record<string, any>
+// >;
+import { TNavigationScreenProps } from "../../../Routes";
 
 export const MusicItem = React.memo(({ item }: MusicItemProps) => {
-  const navigation = useNavigation<TNativeStackNavigationProp>();
+  const navigation = useNavigation<TNavigationScreenProps>();
 
   return (
     <View style={styles.card}>
@@ -43,7 +44,11 @@ export const MusicItem = React.memo(({ item }: MusicItemProps) => {
       </TouchableOpacity>
 
       <View style={styles.actions}>
-        <TouchableOpacity onPress={() => console.log("Deletar", item.id)}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("RemoveMusic", { id: item.id, nome: item.nome })
+          }
+        >
           <Feather name="trash" size={23} color="#5F5F81" />
         </TouchableOpacity>
       </View>

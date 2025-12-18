@@ -4,19 +4,25 @@ import { EditMusic } from "./screens/Musics/EditMusic";
 import { Potpourris } from "./screens/Potpourris";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator, NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {
+  createNativeStackNavigator,
+  NativeStackNavigationProp,
+} from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { AddMusic } from "./screens/Musics/AddMusic";
 
+import { RemoveMusic } from "./screens/Musics/RemoveMusic";
 
 type TScreenDefinition = {
   Main: undefined;
-   Home: undefined;
-   Musicas: undefined;
-   Potpourris: undefined;
-   EditMusic: { id: string };
-   AddMusic: undefined;
-}
+  Home: undefined;
+  Musicas: undefined;
+  Potpourris: undefined;
+  EditMusic: { id: number };
+  AddMusic: undefined;
+  RemoveMusic: { id: number; nome: string };
+};
+
 const Tab = createBottomTabNavigator<TScreenDefinition>();
 const Stack = createNativeStackNavigator<TScreenDefinition>();
 
@@ -84,10 +90,19 @@ export const AppRoutes = () => {
             headerTintColor: "#5856D6",
           }}
         />
+        <Stack.Screen
+          name="RemoveMusic"
+          component={RemoveMusic}
+          options={{
+            headerShown: false,
+            title: "Remover Música",
+            headerTintColor: "#5856D6",
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
 
-
-export type TNavigationScreenProps = NativeStackNavigationProp<TScreenDefinition>;
+export type TNavigationScreenProps =
+  NativeStackNavigationProp<TScreenDefinition>;
