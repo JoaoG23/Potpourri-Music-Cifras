@@ -4,11 +4,21 @@ import { EditMusic } from "./screens/Musics/EditMusic";
 import { Potpourris } from "./screens/Potpourris";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator, NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
+import { AddMusic } from "./screens/Musics/AddMusic";
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+
+type TScreenDefinition = {
+  Main: undefined;
+   Home: undefined;
+   Musicas: undefined;
+   Potpourris: undefined;
+   EditMusic: { id: string };
+   AddMusic: undefined;
+}
+const Tab = createBottomTabNavigator<TScreenDefinition>();
+const Stack = createNativeStackNavigator<TScreenDefinition>();
 
 const TAB_ICONS: Record<
   string,
@@ -39,6 +49,7 @@ const TabRoutes = () => {
             />
           );
         },
+        headerTintColor: "#5856D6",
         tabBarActiveTintColor: "#5856d6",
         tabBarInactiveTintColor: "gray",
       })}
@@ -61,10 +72,22 @@ export const AppRoutes = () => {
           options={{
             headerShown: true,
             title: "Editar Música",
-            headerTintColor: "#5856d6",
+            headerTintColor: "#5856D6",
+          }}
+        />
+        <Stack.Screen
+          name="AddMusic"
+          component={AddMusic}
+          options={{
+            headerShown: true,
+            title: "Adicionar Música",
+            headerTintColor: "#5856D6",
           }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
+
+
+export type TNavigationScreenProps = NativeStackNavigationProp<TScreenDefinition>;

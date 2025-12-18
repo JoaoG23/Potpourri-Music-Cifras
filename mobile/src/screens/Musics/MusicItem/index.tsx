@@ -44,7 +44,7 @@ export const MusicItem = React.memo(({ item }: MusicItemProps) => {
 
       <View style={styles.actions}>
         <TouchableOpacity onPress={() => console.log("Deletar", item.id)}>
-          <Feather name="trash" size={23} color="#bb4e48ff" />
+          <Feather name="trash" size={23} color="#5F5F81" />
         </TouchableOpacity>
       </View>
     </View>

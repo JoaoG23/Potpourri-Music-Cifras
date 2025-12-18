@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
+import { useNavigation } from "@react-navigation/native";
 
 import api from "../../services/api";
 
@@ -15,6 +16,8 @@ import { Input } from "../../components/Input";
 import { MusicItem } from "./MusicItem";
 
 import { Musica } from "./types/musicasTypes";
+import { ButtonFloating } from "./ListMusics/components/ButtonFloating";
+import { TNavigationScreenProps } from "../../Routes";
 
 interface ApiResponse {
   musicas: Musica[];
@@ -25,6 +28,8 @@ interface ApiResponse {
 }
 
 export const Musics = () => {
+  const navigation = useNavigation<TNavigationScreenProps>();
+
   const { control } = useForm({
     defaultValues: { search: "" },
   });
@@ -82,6 +87,7 @@ export const Musics = () => {
 
   return (
     <View style={styles.container}>
+      <ButtonFloating onPress={() => navigation.navigate("AddMusic")} />
       <View style={styles.header}>
         <Input
           name="search"
