@@ -88,7 +88,7 @@ export const Potpourris = () => {
   return (
     <View style={styles.container}>
       {/* TODO: Navegar para tela de adicionar potpourri quando ela existir */}
-      <ButtonFloating onPress={() => console.log("Adicionar Potpourri")} />
+      <ButtonFloating onPress={() => navigation.navigate("AddPotpourri")} />
       <View style={styles.header}>
         <Input
           name="search"

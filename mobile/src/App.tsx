@@ -1,3 +1,4 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AppRoutes } from "./Routes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Toast, {
@@ -39,9 +40,11 @@ const toastConfig: ToastConfig = {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AppRoutes />
-      <Toast config={toastConfig} />
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <AppRoutes />
+        <Toast config={toastConfig} />
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

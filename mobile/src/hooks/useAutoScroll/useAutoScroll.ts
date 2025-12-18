@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ScrollView } from "react-native";
 
 export const useAutoScroll = (scrollRef: React.RefObject<any>) => {
   const [isPlaying, setIsPlaying] = useState(false);
