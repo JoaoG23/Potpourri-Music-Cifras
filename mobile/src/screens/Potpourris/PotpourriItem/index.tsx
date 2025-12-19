@@ -44,6 +44,16 @@ export const PotpourriItem = React.memo(({ item }: PotpourriItemProps) => {
       <View style={styles.actions}>
         <TouchableOpacity
           onPress={() =>
+            navigation.navigate("EditPotpourri", {
+              id: item.id,
+            })
+          }
+        >
+          <Feather name="edit" size={23} color="#5F5F81" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() =>
             navigation.navigate("RemovePotpourri", {
               id: item.id,
               nome: item.nome_potpourri,

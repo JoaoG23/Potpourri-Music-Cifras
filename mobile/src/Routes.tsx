@@ -14,6 +14,7 @@ import {
   RemovePotpourri,
   ViewPotpourri,
   AddPotpourri,
+  EditPotpourri,
 } from "./screens/Potpourris";
 
 import { AddMusic } from "./screens/Musics/AddMusic";
@@ -31,6 +32,7 @@ type TScreenDefinition = {
   RemovePotpourri: { id: number; nome: string };
   ViewPotpourri: { id: number; nome: string };
   AddPotpourri: undefined;
+  EditPotpourri: { id: number };
 };
 
 const Tab = createBottomTabNavigator<TScreenDefinition>();
@@ -133,6 +135,15 @@ export const AppRoutes = () => {
           options={{
             headerShown: true,
             title: "Novo Potpourri",
+            headerTintColor: "#5856D6",
+          }}
+        />
+        <Stack.Screen
+          name="EditPotpourri"
+          component={EditPotpourri}
+          options={{
+            headerShown: true,
+            title: "Editar Potpourri",
             headerTintColor: "#5856D6",
           }}
         />

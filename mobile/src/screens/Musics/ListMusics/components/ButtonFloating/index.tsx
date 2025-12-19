@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     top: 630,
     right: 30,
     zIndex: 1,
-    backgroundColor: "#56D688",
+    backgroundColor: "#56d687c5",
     borderRadius: 30,
     flexDirection: "row",
     alignItems: "center",

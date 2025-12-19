@@ -9,7 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useForm } from "react-hook-form";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import Toast from "react-native-toast-message";
@@ -19,8 +19,8 @@ import { Title } from "../../../components/Title";
 import { Subtitle } from "../../../components/Subtitle";
 import { Input } from "../../../components/Input/Input";
 import { Button } from "../../../components/Button";
-import { AvailableMusicItem } from "./components/AvailableMusicItem";
-import { PlaylistItem } from "./components/PlaylistItem";
+import { AvailableMusicItem } from "../AddPotpourri/components/AvailableMusicItem";
+import { PlaylistItem } from "../AddPotpourri/components/PlaylistItem";
 import { Musica } from "../../Musics/types/musicasTypes";
 import { TNavigationScreenProps } from "../../../Routes";
 
@@ -29,13 +29,21 @@ interface PotpourriForm {
   search: string;
 }
 
-export const AddPotpourri = () => {
+interface MusicaPotpourriItem {
+  id: number;
+  musica: Musica;
+  ordem_tocagem: number;
+}
+
+export const EditPotpourri = () => {
   const navigation = useNavigation<TNavigationScreenProps>();
+  const route = useRoute<any>();
+  const { id } = route.params || {};
   const queryClient = useQueryClient();
   const [playlist, setPlaylist] = useState<Musica[]>([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const { control, handleSubmit, watch, resetField } = useForm<PotpourriForm>({
+  const { control, handleSubmit, watch, setValue } = useForm<PotpourriForm>({
     defaultValues: {
       nome_potpourri: "",
       search: "",
@@ -43,6 +51,42 @@ export const AddPotpourri = () => {
   });
 
   const searchWatch = watch("search");
+
+  // Fetch Potpourri Details (Name)
+  const { data: potpourriData, isLoading: isLoadingPotpourri } = useQuery({
+    queryKey: ["potpourri", id],
+    queryFn: async () => {
+      const response = await api.get(`/potpourri/${id}`);
+      return response?.data?.potpourri;
+    },
+    enabled: !!id,
+  });
+
+  // Fetch Potpourri Musics (Playlist)
+  const { data: musicasData, isLoading: isLoadingMusicas } = useQuery({
+    queryKey: ["potpourri-musicas", id],
+    queryFn: async () => {
+      // Pedimos uma quantidade alta para garantir que pegamos todas as músicas do potpourri para edição
+      const response = await api.get(
+        `/musicas-potpourri/by-potpourri/${id}?page=1&per_page=100`
+      );
+      return (response?.data?.musicas_potpourri || []) as MusicaPotpourriItem[];
+    },
+    enabled: !!id,
+  });
+
+  // Initialize form and playlist state
+  useEffect(() => {
+    if (potpourriData) {
+      setValue("nome_potpourri", potpourriData.nome_potpourri);
+    }
+    if (musicasData && Array.isArray(musicasData)) {
+      const sortedMusicas = [...musicasData]
+        .sort((a, b) => a.ordem_tocagem - b.ordem_tocagem)
+        .map((item) => item.musica);
+      setPlaylist(sortedMusicas);
+    }
+  }, [potpourriData, musicasData, setValue]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -58,24 +102,29 @@ export const AddPotpourri = () => {
       const response = await api.get(
         `/musicas/search?q=${debouncedSearch}&per_page=10`
       );
-      return response.data.musicas as Musica[];
+      return (response?.data?.musicas || []) as Musica[];
     },
     enabled: debouncedSearch.length > 1,
   });
 
-  const { mutate: createPotpourri, isPending: isSaving } = useMutation({
-    mutationFn: async (data: {
+  const { mutate: updatePotpourri, isPending: isSaving } = useMutation({
+    mutationFn: async (payload: {
       nome_potpourri: string;
       musicas_potpourri: any[];
     }) => {
-      return await api.post("/potpourri/create-with-musics", data);
+      return await api.put(`/potpourri/${id}/replace-musics`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["potpourris"] });
+      queryClient.invalidateQueries({ queryKey: ["potpourri", id] });
+      queryClient.invalidateQueries({ queryKey: ["potpourri-musicas", id] });
+      queryClient.invalidateQueries({
+        queryKey: ["potpourri-musicas-view", id],
+      });
       Toast.show({
         type: "success",
         text1: "Sucesso",
-        text2: "Potpourri criado com sucesso!",
+        text2: "Potpourri atualizado com sucesso!",
       });
       navigation.goBack();
     },
@@ -83,7 +132,8 @@ export const AddPotpourri = () => {
       Toast.show({
         type: "error",
         text1: "Erro",
-        text2: error?.response?.data?.message || "Erro ao criar o potpourri",
+        text2:
+          error?.response?.data?.message || "Erro ao atualizar o potpourri",
       });
     },
   });
@@ -100,7 +150,7 @@ export const AddPotpourri = () => {
   }, []);
 
   const onSubmit = (data: PotpourriForm) => {
-    if (playlist.length === 0) {
+    if (playlist?.length === 0) {
       Toast.show({
         type: "error",
         text1: "Atenção",
@@ -111,14 +161,21 @@ export const AddPotpourri = () => {
 
     const payload = {
       nome_potpourri: data.nome_potpourri,
-      musicas_potpourri: playlist.map((m, index) => ({
+      musicas_potpourri: playlist?.map((m, index) => ({
         musica_id: m.id,
         ordem_tocagem: index + 1,
       })),
     };
-
-    createPotpourri(payload);
+    updatePotpourri(payload);
   };
+
+  if (isLoadingPotpourri || isLoadingMusicas || isSearching) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#5856D6" />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -126,7 +183,7 @@ export const AddPotpourri = () => {
       style={styles.container}
     >
       <View style={styles.header}>
-        <Title title="Novo Potpourri" />
+        <Title title="Editar Potpourri" />
         <Input
           name="nome_potpourri"
           control={control}
@@ -203,7 +260,7 @@ export const AddPotpourri = () => {
         {isSaving ? (
           <ActivityIndicator size="large" color="#56D688" />
         ) : (
-          <Button title="Criar Potpourri" onPress={handleSubmit(onSubmit)} />
+          <Button title="Salvar Alterações" onPress={handleSubmit(onSubmit)} />
         )}
       </View>
     </KeyboardAvoidingView>
@@ -251,7 +308,12 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
     marginBottom: 40,
+    borderTopColor: "#eee",
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

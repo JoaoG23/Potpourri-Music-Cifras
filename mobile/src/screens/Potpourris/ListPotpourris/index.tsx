@@ -70,13 +70,14 @@ export const Potpourris = () => {
       return response;
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.data.pagination.has_next
-        ? lastPage.data.pagination.page + 1
-        : null,
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage?.data?.pagination;
+      return pagination?.has_next ? (pagination.page || 0) + 1 : null;
+    },
   });
 
-  const potpourris = data?.pages.flatMap((page) => page.data.potpourri) || [];
+  const potpourris =
+    data?.pages?.flatMap((page) => page?.data?.potpourri || []) || [];
 
   const renderItem = useCallback(
     ({ item }: { item: Potpourri }) => <PotpourriItem item={item} />,
@@ -99,7 +100,7 @@ export const Potpourris = () => {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={styles.center} size="large" color="#5856D6" />
+        <ActivityIndicator style={styles.center} size="large" color="#5319beff" />
       ) : isError ? (
         <Text style={styles.center}>Erro ao carregar potpourris.</Text>
       ) : (
@@ -121,7 +122,7 @@ export const Potpourris = () => {
           ListFooterComponent={
             isFetchingNextPage ? (
               <ActivityIndicator
-                color="#5856D6"
+                color="#5319beff"
                 style={{ marginVertical: 20 }}
               />
             ) : null

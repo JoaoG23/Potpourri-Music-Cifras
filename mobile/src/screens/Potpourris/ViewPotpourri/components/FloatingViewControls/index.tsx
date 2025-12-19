@@ -74,7 +74,7 @@ export const FloatingViewControls = ({
 const styles = StyleSheet.create({
   controlsPosition: {
     position: "absolute",
-    bottom: 40,
+    bottom: 50,
     alignSelf: "center",
   },
   controlsContainer: {

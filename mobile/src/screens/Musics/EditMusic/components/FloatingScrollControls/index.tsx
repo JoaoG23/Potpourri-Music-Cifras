@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   },
   containerPosition: {
     position: "absolute",
-    bottom: 40,
+    bottom: 50,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
