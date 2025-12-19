@@ -72,7 +72,13 @@ const TabRoutes = () => {
         tabBarInactiveTintColor: "gray",
       })}
     >
-      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          headerShown: false,
+        }}
+      />
       <Tab.Screen name="Musicas" component={Musics} />
       <Tab.Screen name="Potpourris" component={Potpourris} />
     </Tab.Navigator>
