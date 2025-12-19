@@ -9,6 +9,7 @@ import {
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
 
 import api from "../../../services/api";
 
@@ -87,6 +88,7 @@ export const Musics = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <ButtonFloating onPress={() => navigation.navigate("AddMusic")} />
       <View style={styles.header}>
         <Input

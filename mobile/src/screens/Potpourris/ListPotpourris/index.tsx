@@ -9,6 +9,7 @@ import {
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from "expo-status-bar";
 
 import api from "../../../services/api";
 
@@ -88,6 +89,7 @@ export const Potpourris = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       {/* TODO: Navegar para tela de adicionar potpourri quando ela existir */}
       <ButtonFloating onPress={() => navigation.navigate("AddPotpourri")} />
       <View style={styles.header}>
@@ -100,7 +102,11 @@ export const Potpourris = () => {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={styles.center} size="large" color="#5319beff" />
+        <ActivityIndicator
+          style={styles.center}
+          size="large"
+          color="#5319beff"
+        />
       ) : isError ? (
         <Text style={styles.center}>Erro ao carregar potpourris.</Text>
       ) : (
