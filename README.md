@@ -1,10 +1,11 @@
 # Potpourri Music Cifras
 
-Aplicação web para gerenciamento e visualização de cifras musicais, permitindo criar, editar e compartilhar partições musicais de forma colaborativa.
+Aplicação web e mobile para gerenciamento e visualização de cifras musicais, permitindo criar, editar e compartilhar partições musicais de forma colaborativa.
 
 ## 🚀 Tecnologias
 
 ### Frontend
+
 - **React** com TypeScript
 - **Vite** como bundler e dev server
 - **Radix UI** para componentes acessíveis
@@ -17,6 +18,7 @@ Aplicação web para gerenciamento e visualização de cifras musicais, permitin
 - **Lucide Icons** para ícones
 
 ### Backend
+
 - **Python** 3.12
 - **Flask** como framework web
 - **SQLAlchemy** como ORM
@@ -25,7 +27,18 @@ Aplicação web para gerenciamento e visualização de cifras musicais, permitin
 - **Flask-CORS** para lidar com CORS
 - **BeautifulSoup4** e **Selenium** para web scraping
 
+### Mobile
+
+- **React Native** com Expo
+- **TypeScript**
+- **React Navigation** para navegabilidade
+- **React Query** para gerenciamento de estado e cache
+- **Axios** para requisições HTTP
+- **React Hook Form** para manipulação de formulários
+- **Expo Keep Awake** para manter a tela ligada durante a visualização
+
 ### Infraestrutura
+
 - **Docker** e **Docker Compose** para conteinerização
 - **Nginx** como servidor web reverso
 - **PostgreSQL** para armazenamento de dados
@@ -40,12 +53,14 @@ Aplicação web para gerenciamento e visualização de cifras musicais, permitin
 ### Passo a Passo
 
 1. **Clone o repositório**
+
    ```bash
    git clone https://github.com/JoaoG23/Potpourri-Music-Cifras.git
    cd Potpourri-Music-Cifras
    ```
 
 2. **Configure as variáveis de ambiente**
+
    - Crie um arquivo `.env.prod` na pasta `backend/` com as configurações do banco de dados:
      ```
      DATABASE_URL=postgresql://user:password@postgres:5432/potpourri_db
@@ -59,11 +74,13 @@ Aplicação web para gerenciamento e visualização de cifras musicais, permitin
      ```
 
 3. **Inicie os contêineres**
+
    ```bash
    docker-compose up --build -d
    ```
 
 4. **Acesse a aplicação**
+
    - Frontend: http://localhost:84
    - Backend API: http://localhost:3004
 
@@ -71,6 +88,45 @@ Aplicação web para gerenciamento e visualização de cifras musicais, permitin
    ```bash
    docker-compose down
    ```
+
+## 📱 Como Executar o Mobile
+
+O aplicativo mobile foi desenvolvido utilizando **Expo**.
+
+### Pré-requisitos
+
+- Node.js instalado
+- Expo Go instalado no seu dispositivo móvel (ou um emulador configurado)
+
+### Passo a Passo
+
+1. **Acesse a pasta mobile**
+
+   ```bash
+   cd mobile
+   ```
+
+2. **Instale as dependências**
+
+   ```bash
+   npm install
+   ```
+
+3. **Configure a URL da API**
+
+   - Crie um arquivo `.env` na pasta `mobile` (se não existir) e adicione a URL da API:
+     ```env
+     EXPO_PUBLIC_API_URL=http://SEU_IP:3004/api
+     ```
+
+4. **Inicie o projeto**
+
+   ```bash
+   npx expo start
+   ```
+
+5. **Acesse no dispositivo**
+   - Escaneie o QR Code exibido no terminal usando o aplicativo **Expo Go**.
 
 ## 🏗️ Estrutura do Projeto
 
@@ -92,6 +148,12 @@ Potpourri-Music-Cifras/
 │   ├── package.json       # Dependências e scripts
 │   └── vite.config.ts     # Configuração do Vite
 │
+├── mobile/                # Código-fonte do aplicativo mobile (Expo)
+│   ├── src/               # Código-fonte React Native
+│   ├── assets/            # Imagens e recursos estáticos
+│   ├── app.json           # Configuração do Expo
+│   └── package.json       # Dependências e scripts
+│
 ├── docker-compose.yml     # Configuração do Docker Compose
 └── README.md             # Este arquivo
 ```
@@ -108,5 +170,3 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e enviar 
 
 - **Autor**: João Gabriel
 - **GitHub**: [@JoaoG23](https://github.com/JoaoG23)
-
-
