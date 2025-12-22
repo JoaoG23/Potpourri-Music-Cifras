@@ -65,16 +65,23 @@ class MusicasPotpourriService:
     
     @staticmethod
     def get_musicas_by_potpourri_id(potpourri_id: int, page: int = 1, per_page: int = 10) -> Any:
-        """Get all musicas for a specific potpourri"""
+        """Get all musicas for a specific potpourri with complete music data"""
         try:
             # Validate if potpourri exists
             potpourri = Potpourri.query.get(potpourri_id)
             if not potpourri:
                 raise Exception("Potpourri não encontrado")
             
-            paginated_musicas_potpourri = MusicasPotpourri.query.filter_by(
-                potpourri_id=potpourri_id
-            ).order_by(MusicasPotpourri.ordem_tocagem).paginate(
+            # Query with JOIN to get complete music data
+            paginated_musicas_potpourri = db.session.query(
+                MusicasPotpourri, Musica
+            ).join(
+                Musica, MusicasPotpourri.musica_id == Musica.id
+            ).filter(
+                MusicasPotpourri.potpourri_id == potpourri_id
+            ).order_by(
+                MusicasPotpourri.ordem_tocagem
+            ).paginate(
                 page=page,
                 per_page=per_page,
                 error_out=False

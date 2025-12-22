@@ -1,9 +1,18 @@
-from flask import Flask
+from flask import Flask, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from extensions import app, db
+
+# Disable automatic slash redirects to prevent CORS issues
+app.url_map.strict_slashes = False
+
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(

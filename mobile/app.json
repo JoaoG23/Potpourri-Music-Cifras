@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Potpourri Music Cifra",
+    "slug": "potpourri-music-cifra",
+    "version": "1.0.8",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#fff"
+      },
+      "package": "com.joaog.potpourrimusiccifra",
+      "usesCleartextTraffic": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-build-properties"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d74e68b5-db02-43e7-868f-8afcdbb2cb08"
+      }
+    }
+  }
+}

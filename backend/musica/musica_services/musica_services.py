@@ -99,9 +99,6 @@ class MusicaService:
             if not musica:
                 raise Exception("Música não encontrada")
             
-            # Update fields if provided
-            musica.nome = data['nome']
-            musica.artista = data['artista']
             musica.link_musica = data['link_musica']
             musica.cifra = data['cifra']
             musica.velocidade_rolamento = data['velocidade_rolamento']

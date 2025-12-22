@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Home as HomeIcon, Music } from 'lucide-react';
+import { Toaster } from '../ui/sonner';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -51,6 +52,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <main className="container mx-auto">
         {children}
       </main>
+      
+      {/* Toast notifications */}
+      <Toaster />
     </div>
   );
 };

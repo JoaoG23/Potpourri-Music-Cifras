@@ -6,7 +6,7 @@ POST http://localhost:5000/api/musicas
 Content-Type: application/json
 
 {
-    "link_musica": "https://www.cifraclub.com.br/rita-lee/ovelha-negra"
+    "link_musica": "https://www.cifraclub.com.br/fagner/espumas-ao-vento/"
 }
 
 
@@ -54,7 +54,7 @@ GET http://localhost:5000/api/potpourri/?page=1&per_page=10
 GET http://localhost:5000/api/potpourri/1
 
 ### Buscar potpourri por nome
-GET http://localhost:5000/api/potpourri/search?q=samba&page=1&per_page=10
+GET http://localhost:5000/api/potpourri/search?q=Fagner&page=1&per_page=10
 
 ### Atualizar potpourri
 PUT http://localhost:5000/api/potpourri/1
@@ -102,10 +102,10 @@ Content-Type: application/json
 GET http://localhost:5000/api/musicas-potpourri/?page=1&per_page=10
 
 ### Buscar relacionamento por ID
-GET http://localhost:5000/api/musicas-potpourri/1
+GET http://localhost:5000/api/musicas-potpourri/2
 
 ### Buscar músicas de um potpourri específico
-GET http://localhost:5000/api/musicas-potpourri/by-potpourri/1?page=1&per_page=10
+GET http://localhost:5000/api/musicas-potpourri/by-potpourri/2?page=1&per_page=10
 
 ### Atualizar relacionamento música-potpourri
 PUT http://localhost:5000/api/musicas-potpourri/1
@@ -118,4 +118,18 @@ Content-Type: application/json
 ### Deletar relacionamento música-potpourri
 DELETE http://localhost:5000/api/musicas-potpourri/1
 
+
+
+### Substituir músicas de um potpourri (e opcionalmente atualizar o nome)
+PUT http://localhost:5000/api/potpourri/16/replace-musics
+Content-Type: application/json
+
+{
+    "nome_potpourri": "EDITADA",
+    "musicas_potpourri": [
+        { "musica_id": 78, "ordem_tocagem": 1 },
+        { "musica_id": 79, "ordem_tocagem": 2 },
+        { "musica_id": 80, "ordem_tocagem": 3 }
+    ]
+}
 
