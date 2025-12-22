@@ -53,7 +53,7 @@ const TAB_ICONS: Record<
 const TabRoutes = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Musicas"
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           const icons = TAB_ICONS[route.name];

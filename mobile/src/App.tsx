@@ -7,6 +7,8 @@ import Toast, {
   ToastConfig,
 } from "react-native-toast-message";
 
+import { useKeepAwake } from "expo-keep-awake";
+
 const queryClient = new QueryClient();
 
 const toastConfig: ToastConfig = {
@@ -39,6 +41,8 @@ const toastConfig: ToastConfig = {
 };
 
 export default function App() {
+  useKeepAwake();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
