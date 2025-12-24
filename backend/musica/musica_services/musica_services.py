@@ -52,7 +52,7 @@ class MusicaService:
     def get_all_musicas(page=1, per_page=10):
         """Get all musicas with pagination"""
         try:
-            paginated_musicas = Musica.query.paginate(
+            paginated_musicas = Musica.query.order_by(Musica.updated_at.desc()).paginate(
                 page=page,
                 per_page=per_page,
                 error_out=False
