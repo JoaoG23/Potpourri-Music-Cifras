@@ -39,7 +39,7 @@ export const colorirCifras = (texto: string) => {
     }
 
     return (
-      <Text key={`line-${lineIdx}`} style={{ fontSize: 14, fontFamily: "monospace" }}>
+      <Text key={`line-${lineIdx}`} style={{ fontSize: 15, fontFamily: "monospace", marginBottom: 3 }}>
         {partes}
         {/* {"\n"} */}
       </Text>

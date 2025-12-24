@@ -135,3 +135,8 @@ Content-Type: application/json
     ]
 }
 
+
+##### Teste produção #####
+
+### Teste produção
+GET https://potpourri-music-cifras.vercel.app/api/musicas/?page=1&per_page=10

@@ -31,7 +31,7 @@ class PotpourriService:
     def get_all_potpourri(page: int = 1, per_page: int = 10) -> Any:
         """Get all potpourri with pagination"""
         try:
-            paginated_potpourri = Potpourri.query.paginate(
+            paginated_potpourri = Potpourri.query.order_by(Potpourri.updated_at.desc()).paginate(
                 page=page,
                 per_page=per_page,
                 error_out=False

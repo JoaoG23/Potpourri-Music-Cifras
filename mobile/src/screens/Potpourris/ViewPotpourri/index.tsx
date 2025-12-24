@@ -47,28 +47,6 @@ export const ViewPotpourri = () => {
   const { isPlaying, speed, setSpeed, togglePlay, handleScroll } =
     useAutoScroll(flatListRef);
 
-  // const {
-  //   data,
-  //   fetchNextPage,
-  //   hasNextPage,
-  //   isFetchingNextPage,
-  //   isLoading,
-  //   isError,
-  // } = useInfiniteQuery({
-  //   queryKey: ["potpourri-musicas", id],
-  //   queryFn: async ({ pageParam = 1 }) => {
-  //     const response = await api.get<ApiResponse>(
-  //       `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=2`
-  //     );
-  //     return response;
-  //   },
-  //   initialPageParam: 1,
-  //   getNextPageParam: (lastPage) => {
-  //     const pagination = lastPage?.data?.pagination;
-  //     return pagination?.has_next ? (pagination.page || 0) + 1 : null;
-  //   },
-  //   enabled: !!id,
-  // });
   const {
     data,
     fetchNextPage,
@@ -80,7 +58,7 @@ export const ViewPotpourri = () => {
     queryKey: ["potpourri-musicas-view", id], // Mudei de "potpourri-musicas" para "potpourri-musicas-view"
     queryFn: async ({ pageParam = 1 }) => {
       const response = await api.get<ApiResponse>(
-        `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=2`
+        `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=3`
       );
       return response;
     },
