@@ -169,7 +169,7 @@ export const EditPotpourri = () => {
     updatePotpourri(payload);
   };
 
-  if (isLoadingPotpourri || isLoadingMusicas || isSearching) {
+  if (isLoadingPotpourri || isLoadingMusicas) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#5856D6" />

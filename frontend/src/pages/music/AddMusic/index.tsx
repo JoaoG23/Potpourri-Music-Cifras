@@ -23,14 +23,6 @@ interface MusicFormData {
   link_musica: string;
 }
 
-interface AddMusicResponse {
-  data: {
-    musica: {
-      id: string;
-    };
-  };
-}
-
 export const AddMusic: React.FC = () => {
   const navigate = useNavigate();
 
@@ -38,7 +30,6 @@ export const AddMusic: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<MusicFormData>({
     defaultValues: {
       link_musica: "",
