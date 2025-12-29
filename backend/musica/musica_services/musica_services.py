@@ -2,6 +2,7 @@ from app import db
 from musica.musica_model.musica_model import Musica
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_
+from sqlalchemy.orm import defer
 from musica.musica_services.search_music_by_url.search_music_by_url import search_music_by_url
 import re
 from typing import Dict
@@ -52,7 +53,7 @@ class MusicaService:
     def get_all_musicas(page=1, per_page=10):
         """Get all musicas with pagination"""
         try:
-            paginated_musicas = Musica.query.order_by(Musica.updated_at.desc()).paginate(
+            paginated_musicas = Musica.query.options(defer(Musica.cifra)).order_by(Musica.updated_at.desc()).paginate(
                 page=page,
                 per_page=per_page,
                 error_out=False
@@ -77,7 +78,7 @@ class MusicaService:
     def search_musicas_by_name(search_term, page=1, per_page=10):
         """Search musicas by name"""
         try:
-            paginated_musicas = Musica.query.filter(
+            paginated_musicas = Musica.query.options(defer(Musica.cifra)).filter(
                 or_(
                     Musica.nome.ilike(f'%{search_term}%'),
                     Musica.artista.ilike(f'%{search_term}%')

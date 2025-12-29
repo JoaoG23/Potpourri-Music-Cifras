@@ -16,15 +16,17 @@ class Musica(db.Model):
     def __repr__(self):
         return f'<Musica {self.nome}>'
     
-    def to_dict(self):
+    def to_dict(self, include_cifra=True):
         """Convert model to dictionary for JSON serialization"""
-        return {
+        data = {
             'id': self.id,
             'nome': self.nome,
             'artista': self.artista,
             'link_musica': self.link_musica,
-            'cifra': self.cifra,
             'velocidade_rolamento': self.velocidade_rolamento,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+        if include_cifra:
+            data['cifra'] = self.cifra
+        return data

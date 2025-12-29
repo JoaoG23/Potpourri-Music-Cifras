@@ -32,7 +32,7 @@ def get_all_musicas():
         else:
             paginated_musicas = MusicaService.get_all_musicas(page, per_page)
         
-        musicas = [musica.to_dict() for musica in paginated_musicas.items]
+        musicas = [musica.to_dict(include_cifra=False) for musica in paginated_musicas.items]
         
         return jsonify({
             'musicas': musicas,
@@ -109,7 +109,7 @@ def search_musicas():
             return jsonify({'message': 'Termo de busca é obrigatório'}), 400
         
         paginated_musicas = MusicaService.search_musicas_by_name(search_term, page, per_page)
-        musicas = [musica.to_dict() for musica in paginated_musicas.items]
+        musicas = [musica.to_dict(include_cifra=False) for musica in paginated_musicas.items]
         
         return jsonify({
             'musicas': musicas,
