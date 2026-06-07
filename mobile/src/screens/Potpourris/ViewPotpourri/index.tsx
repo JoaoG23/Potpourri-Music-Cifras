@@ -6,9 +6,12 @@ import {
   ActivityIndicator,
   FlatList,
   ScrollView,
+  TouchableOpacity,
+  Linking,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { Ionicons } from "@expo/vector-icons";
 
 import api from "../../../services/api";
 import { Title } from "../../../components/Title";
@@ -16,20 +19,7 @@ import { Subtitle } from "../../../components/Subtitle";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { useAutoScroll } from "../../../hooks/useAutoScroll/useAutoScroll";
 import { FloatingViewControls } from "./components/FloatingViewControls";
-
-interface Musica {
-  id: number;
-  nome: string;
-  artista: string;
-  cifra: string;
-  velocidade_rolamento: number;
-}
-
-interface MusicaPotpourriItem {
-  id: number;
-  musica: Musica;
-  ordem_tocagem: number;
-}
+import { MusicaPotpourriItem } from "../types/potpourriTypes";
 
 interface ApiResponse {
   musicas_potpourri: MusicaPotpourriItem[];
@@ -76,8 +66,22 @@ export const ViewPotpourri = () => {
 
   const renderItem = ({ item }: { item: MusicaPotpourriItem }) => (
     <View style={styles.musicaContainer}>
-      <Title title={item.musica.nome} />
-      <Subtitle title={item.musica.artista} />
+      <View style={styles.headerContainer}>
+        <View style={styles.textContainer}>
+          <Title title={item.musica.nome} />
+          <Subtitle title={item.musica.artista} />
+        </View>
+        {item.musica.link_musica && (
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => Linking.openURL(item.musica.link_musica!)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="open-outline" size={16} color="#fff" />
+            <Text style={styles.linkText}>Cifra Club</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <View style={styles.cifraContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View>{colorirCifras(item.musica.cifra)}</View>
@@ -154,6 +158,35 @@ const styles = StyleSheet.create({
   },
   musicaContainer: {
     marginBottom: 40,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  textContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  linkButton: {
+    backgroundColor: "#fc8f36",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginTop: 4,
+    shadowColor: "#fc8f36",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  linkText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "bold",
+    marginLeft: 4,
   },
   cifraContainer: {
     backgroundColor: "#f9f9f9",
