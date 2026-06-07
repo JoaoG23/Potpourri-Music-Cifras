@@ -8,6 +8,8 @@ import {
   CardTitle,
   CardContent,
 } from "../../../components/ui/card";
+import { Button } from "../../../components/ui/button";
+import { ExternalLink } from "lucide-react";
 import { FloatingControls } from "../../../components/FloatingControls";
 
 export const ViewPotpourri: React.FC = () => {
@@ -142,8 +144,25 @@ export const ViewPotpourri: React.FC = () => {
       {potpourri &&
         potpourri.map((music) => (
           <Card key={music.id}>
-            <CardHeader className="px-3">
+            <CardHeader className="px-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle>{music.musica.nome}</CardTitle>
+              {music.musica.link_musica && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="bg-[#fc8f36] hover:bg-[#e07b2b] text-white hover:text-white border-none flex items-center gap-1.5 rounded-full"
+                >
+                  <a
+                    href={music.musica.link_musica}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Cifra Club
+                  </a>
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="px-2">
               <div className="space-y-4">
