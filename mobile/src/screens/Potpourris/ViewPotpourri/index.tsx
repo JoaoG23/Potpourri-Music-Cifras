@@ -26,7 +26,11 @@ interface RespostaApiPotpourri {
   musicas_potpourri: MusicaPotpourriItem[];
   pagination: {
     has_next: boolean;
+    has_prev?: boolean;
     page: number;
+    pages?: number;
+    per_page?: number;
+    total?: number;
   };
 }
 
@@ -59,7 +63,7 @@ export const ViewPotpourri = () => {
     queryKey: ["potpourri-musicas-view", identificadorPotpourri],
     queryFn: async ({ pageParam = 1 }) => {
       const respostaRequisicao = await api.get<RespostaApiPotpourri>(
-        `/musicas-potpourri/by-potpourri/${identificadorPotpourri}?page=${pageParam}&per_page=10`
+        `/musicas-potpourri/by-potpourri/${identificadorPotpourri}?page=${pageParam}&per_page=4`
       );
       return respostaRequisicao;
     },
@@ -74,7 +78,7 @@ export const ViewPotpourri = () => {
     enabled: !!identificadorPotpourri,
   });
 
-  // Lista memoizada de músicas do potpourri
+  // Lista memoizada de músicas do potpourri carregadas até o momento
   const listaMusicasPotpourri = useMemo(() => {
     return (
       dadosRequisicaoPotpourri?.pages?.flatMap(
@@ -82,6 +86,15 @@ export const ViewPotpourri = () => {
       ) || []
     );
   }, [dadosRequisicaoPotpourri]);
+
+  // Total geral de músicas do potpourri vindo da paginação da API (ex: 84)
+  const totalGeralMusicasPotpourri = useMemo(() => {
+    const totalVindoDaPaginacao =
+      dadosRequisicaoPotpourri?.pages?.[0]?.data?.pagination?.total;
+    return totalVindoDaPaginacao && totalVindoDaPaginacao > 0
+      ? totalVindoDaPaginacao
+      : listaMusicasPotpourri.length;
+  }, [dadosRequisicaoPotpourri, listaMusicasPotpourri.length]);
 
   // Atualiza a velocidade de rolamento apenas se houver diferença real na velocidade configurada da nova música ativa
   useEffect(() => {
@@ -198,6 +211,8 @@ export const ViewPotpourri = () => {
           listaMusicasPotpourri={listaMusicasPotpourri}
           indiceMusicaAtual={indiceMusicaAtiva}
           velocidadeAtual={velocidadeRolamentoAtual}
+          totalMusicasGeral={totalGeralMusicasPotpourri}
+          estaExecutandoRolamento={estaExecutandoRolamento}
           aoSelecionarMusica={navegarParaIndiceMusica}
         />
       )}

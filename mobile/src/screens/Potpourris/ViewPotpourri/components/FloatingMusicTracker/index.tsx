@@ -15,6 +15,8 @@ export interface PropriedadesRastreadorMusicaFlutuante {
   listaMusicasPotpourri: MusicaPotpourriItem[];
   indiceMusicaAtual: number;
   velocidadeAtual: number;
+  totalMusicasGeral?: number;
+  estaExecutandoRolamento?: boolean;
   aoSelecionarMusica: (indiceMusicaDestino: number) => void;
 }
 
@@ -22,21 +24,30 @@ export const FloatingMusicTracker: React.FC<PropriedadesRastreadorMusicaFlutuant
   listaMusicasPotpourri,
   indiceMusicaAtual,
   velocidadeAtual,
+  totalMusicasGeral,
+  estaExecutandoRolamento,
   aoSelecionarMusica,
 }) => {
   const [estaModalPlaylistAberto, setEstaModalPlaylistAberto] =
     useState<boolean>(false);
+  const [estaMinimizado, setEstaMinimizado] = useState<boolean>(false);
 
   if (!listaMusicasPotpourri || listaMusicasPotpourri.length === 0) {
     return null;
   }
 
-  const totalMusicasPotpourri = listaMusicasPotpourri.length;
+  // Total geral vindo da paginação da API (ex: 84) ou fallback para a lista carregada
+  const totalMusicasEfetivo =
+    totalMusicasGeral && totalMusicasGeral > 0
+      ? totalMusicasGeral
+      : listaMusicasPotpourri.length;
+
   const informacoesMusicaAtual =
     listaMusicasPotpourri[indiceMusicaAtual] || listaMusicasPotpourri[0];
   const numeroMusicaAtual = indiceMusicaAtual + 1;
-  const percentualProgressoPotpourri = Math.round(
-    (numeroMusicaAtual / totalMusicasPotpourri) * 100
+  const percentualProgressoPotpourri = Math.min(
+    100,
+    Math.round((numeroMusicaAtual / totalMusicasEfetivo) * 100)
   );
 
   const executarNavegacaoMusicaAnterior = () => {
@@ -46,7 +57,7 @@ export const FloatingMusicTracker: React.FC<PropriedadesRastreadorMusicaFlutuant
   };
 
   const executarNavegacaoProximaMusica = () => {
-    if (indiceMusicaAtual < totalMusicasPotpourri - 1) {
+    if (indiceMusicaAtual < listaMusicasPotpourri.length - 1) {
       aoSelecionarMusica(indiceMusicaAtual + 1);
     }
   };
@@ -59,111 +70,156 @@ export const FloatingMusicTracker: React.FC<PropriedadesRastreadorMusicaFlutuant
   return (
     <>
       <View style={estilos.containerFlutuante} pointerEvents="box-none">
-        <View style={estilos.cartaoPrincipal}>
-          {/* Linha Principal de Informações e Botões */}
-          <View style={estilos.linhaPrincipal}>
-            {/* Badge com Número da Faixa Atual */}
-            <TouchableOpacity
-              style={estilos.containerBadgeIcone}
-              onPress={() => setEstaModalPlaylistAberto(true)}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="musical-notes" size={18} color="#fff" />
-              <View style={estilos.containerNumeroBadge}>
-                <Text style={estilos.textoNumeroBadge}>{numeroMusicaAtual}</Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* Informações da Música Atual */}
-            <TouchableOpacity
-              style={estilos.containerInformacoesMusica}
-              onPress={() => setEstaModalPlaylistAberto(true)}
-              activeOpacity={0.8}
-            >
-              <View style={estilos.linhaMetaInformacoes}>
-                <Text style={estilos.textoOrdemMusica}>
-                  MÚSICA {numeroMusicaAtual} DE {totalMusicasPotpourri}
-                </Text>
-                <View style={estilos.tagVelocidade}>
-                  <Ionicons name="speedometer-outline" size={11} color="#5856d6" />
-                  <Text style={estilos.textoTagVelocidade}>
-                    {velocidadeAtual ? `${velocidadeAtual.toFixed(1)}x` : "1.0x"}
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={estilos.tituloMusica}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {informacoesMusicaAtual?.musica?.nome || "Música"}
-              </Text>
-              <Text
-                style={estilos.artistaMusica}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {informacoesMusicaAtual?.musica?.artista || ""}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Botões de Ação e Navegação */}
-            <View style={estilos.containerBotoesAcao}>
+        {estaMinimizado ? (
+          /* Visualização Minimizado / Compacta (permite ler as cifras sem obstrução) */
+          <TouchableOpacity
+            style={estilos.pilulaMinimizada}
+            onPress={() => setEstaMinimizado(false)}
+            activeOpacity={0.85}
+          >
+            <View style={estilos.miniBadgeIcone}>
+              <Ionicons name="musical-notes" size={14} color="#fff" />
+            </View>
+            <Text style={estilos.textoPilulaMinimizada}>
+              {numeroMusicaAtual}/{totalMusicasEfetivo}
+            </Text>
+            <View style={estilos.separadorMini} />
+            <Text style={estilos.textoVelocidadeMinimizada}>
+              {velocidadeAtual ? `${velocidadeAtual.toFixed(1)}x` : "1.0x"}
+            </Text>
+            <Ionicons
+              name="eye-outline"
+              size={16}
+              color="#5856d6"
+              style={{ marginLeft: 4 }}
+            />
+          </TouchableOpacity>
+        ) : (
+          /* Visualização Completa do Rastreador Flutuante */
+          <View style={estilos.cartaoPrincipal}>
+            {/* Linha Principal de Informações e Botões */}
+            <View style={estilos.linhaPrincipal}>
+              {/* Badge com Número da Faixa Atual */}
               <TouchableOpacity
-                style={[
-                  estilos.botaoNavegacao,
-                  indiceMusicaAtual <= 0 && estilos.botaoNavegacaoDesabilitado,
-                ]}
-                onPress={executarNavegacaoMusicaAnterior}
-                disabled={indiceMusicaAtual <= 0}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="chevron-up"
-                  size={18}
-                  color={indiceMusicaAtual <= 0 ? "#bbb" : "#333"}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  estilos.botaoNavegacao,
-                  indiceMusicaAtual >= totalMusicasPotpourri - 1 &&
-                    estilos.botaoNavegacaoDesabilitado,
-                ]}
-                onPress={executarNavegacaoProximaMusica}
-                disabled={indiceMusicaAtual >= totalMusicasPotpourri - 1}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name="chevron-down"
-                  size={18}
-                  color={
-                    indiceMusicaAtual >= totalMusicasPotpourri - 1 ? "#bbb" : "#333"
-                  }
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[estilos.botaoNavegacao, estilos.botaoAbrirListaPlaylist]}
+                style={estilos.containerBadgeIcone}
                 onPress={() => setEstaModalPlaylistAberto(true)}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
               >
-                <Ionicons name="list" size={18} color="#5856d6" />
+                <Ionicons name="musical-notes" size={18} color="#fff" />
+                <View style={estilos.containerNumeroBadge}>
+                  <Text style={estilos.textoNumeroBadge}>{numeroMusicaAtual}</Text>
+                </View>
               </TouchableOpacity>
+
+              {/* Informações da Música Atual */}
+              <TouchableOpacity
+                style={estilos.containerInformacoesMusica}
+                onPress={() => setEstaModalPlaylistAberto(true)}
+                activeOpacity={0.8}
+              >
+                <View style={estilos.linhaMetaInformacoes}>
+                  <Text style={estilos.textoOrdemMusica}>
+                    MÚSICA {numeroMusicaAtual} DE {totalMusicasEfetivo}
+                  </Text>
+                  <View style={estilos.tagVelocidade}>
+                    <Ionicons
+                      name="speedometer-outline"
+                      size={11}
+                      color="#5856d6"
+                    />
+                    <Text style={estilos.textoTagVelocidade}>
+                      {velocidadeAtual ? `${velocidadeAtual.toFixed(1)}x` : "1.0x"}
+                    </Text>
+                  </View>
+                </View>
+                <Text
+                  style={estilos.tituloMusica}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {informacoesMusicaAtual?.musica?.nome || "Música"}
+                </Text>
+                <Text
+                  style={estilos.artistaMusica}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {informacoesMusicaAtual?.musica?.artista || ""}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Botões de Ação e Navegação */}
+              <View style={estilos.containerBotoesAcao}>
+                <TouchableOpacity
+                  style={[
+                    estilos.botaoNavegacao,
+                    indiceMusicaAtual <= 0 && estilos.botaoNavegacaoDesabilitado,
+                  ]}
+                  onPress={executarNavegacaoMusicaAnterior}
+                  disabled={indiceMusicaAtual <= 0}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-up"
+                    size={18}
+                    color={indiceMusicaAtual <= 0 ? "#bbb" : "#333"}
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    estilos.botaoNavegacao,
+                    indiceMusicaAtual >= listaMusicasPotpourri.length - 1 &&
+                      estilos.botaoNavegacaoDesabilitado,
+                  ]}
+                  onPress={executarNavegacaoProximaMusica}
+                  disabled={indiceMusicaAtual >= listaMusicasPotpourri.length - 1}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="chevron-down"
+                    size={18}
+                    color={
+                      indiceMusicaAtual >= listaMusicasPotpourri.length - 1
+                        ? "#bbb"
+                        : "#333"
+                    }
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    estilos.botaoNavegacao,
+                    estilos.botaoAbrirListaPlaylist,
+                  ]}
+                  onPress={() => setEstaModalPlaylistAberto(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="list" size={18} color="#5856d6" />
+                </TouchableOpacity>
+
+                {/* Botão de Minimizar / Ocultar o mostrador */}
+                <TouchableOpacity
+                  style={[estilos.botaoNavegacao, estilos.botaoMinimizar]}
+                  onPress={() => setEstaMinimizado(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="eye-off-outline" size={16} color="#666" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Barra de Progresso do Potpourri */}
+            <View style={estilos.containerBarraProgresso}>
+              <View
+                style={[
+                  estilos.preenchimentoBarraProgresso,
+                  { width: `${percentualProgressoPotpourri}%` },
+                ]}
+              />
             </View>
           </View>
-
-          {/* Barra de Progresso do Potpourri */}
-          <View style={estilos.containerBarraProgresso}>
-            <View
-              style={[
-                estilos.preenchimentoBarraProgresso,
-                { width: `${percentualProgressoPotpourri}%` },
-              ]}
-            />
-          </View>
-        </View>
+        )}
       </View>
 
       {/* Modal da Playlist de Músicas */}
@@ -185,7 +241,8 @@ export const FloatingMusicTracker: React.FC<PropriedadesRastreadorMusicaFlutuant
               <View style={estilos.linhaTituloModal}>
                 <Ionicons name="list" size={20} color="#5856d6" />
                 <Text style={estilos.tituloModal}>
-                  Músicas do Potpourri ({totalMusicasPotpourri})
+                  Músicas do Potpourri ({listaMusicasPotpourri.length} de{" "}
+                  {totalMusicasEfetivo})
                 </Text>
               </View>
               <TouchableOpacity
@@ -279,6 +336,52 @@ const estilos = StyleSheet.create({
     right: 16,
     zIndex: 100,
   },
+  pilulaMinimizada: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+    alignSelf: "flex-start",
+    gap: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  miniBadgeIcone: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#5856d6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  textoPilulaMinimizada: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+  separadorMini: {
+    width: 1,
+    height: 12,
+    backgroundColor: "#d1d5db",
+  },
+  textoVelocidadeMinimizada: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#5856d6",
+  },
   cartaoPrincipal: {
     backgroundColor: "rgba(255, 255, 255, 0.96)",
     borderRadius: 18,
@@ -286,7 +389,7 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 8,
     borderWidth: 1,
-    opacity: 0.65,
+    opacity: 0.8,
     borderColor: "rgba(0, 0, 0, 0.08)",
     ...Platform.select({
       ios: {
@@ -380,8 +483,8 @@ const estilos = StyleSheet.create({
     gap: 2,
   },
   botaoNavegacao: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: 8,
     backgroundColor: "#f3f4f6",
     justifyContent: "center",
@@ -392,6 +495,9 @@ const estilos = StyleSheet.create({
   },
   botaoAbrirListaPlaylist: {
     backgroundColor: "#eff1fe",
+  },
+  botaoMinimizar: {
+    backgroundColor: "#f9fafb",
   },
   containerBarraProgresso: {
     height: 3,
