@@ -179,9 +179,7 @@ export const ViewPotpourri = () => {
         )}
       </View>
       <View style={styles.cifraContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View>{colorirCifras(item.musica.cifra)}</View>
-        </ScrollView>
+        <View>{colorirCifras(item.musica.cifra)}</View>
       </View>
       <View style={styles.separator} />
     </View>
