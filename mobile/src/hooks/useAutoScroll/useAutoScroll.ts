@@ -33,9 +33,9 @@ export const useAutoScroll = (referenciaComponenteScroll: React.RefObject<any>) 
           ? velocidadeDesejada
           : referenciaVelocidadeRolamento.current || 1.0;
 
-      // Taxa de atualização fluida (~40fps) e passo proporcional à velocidade
+      // Taxa de atualização fluida (~40fps) e passo proporcional à velocidade (0.3px em 1.0x)
       const intervaloMilissegundos = 25;
-      const taxaPassoPorTick = Math.max(0.4, Number((velocidadeEfetiva * 0.9).toFixed(2)));
+      const taxaPassoPorTick = Math.max(0.1, Number((velocidadeEfetiva * 0.3).toFixed(2)));
 
       referenciaIdentificadorIntervalo.current = setInterval(() => {
         referenciaPosicaoScrollY.current += taxaPassoPorTick;
