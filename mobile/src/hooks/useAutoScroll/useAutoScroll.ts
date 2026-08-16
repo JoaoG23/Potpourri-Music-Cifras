@@ -1,74 +1,104 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-export const useAutoScroll = (scrollRef: React.RefObject<any>) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1.0);
-  const scrollY = useRef(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+export const useAutoScroll = (referenciaComponenteScroll: React.RefObject<any>) => {
+  const [estaExecutandoRolamento, setEstaExecutandoRolamento] = useState<boolean>(false);
+  const [velocidadeRolamentoAtual, setVelocidadeRolamentoAtual] = useState<number>(1.0);
 
-  const stopScrolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+  const referenciaPosicaoScrollY = useRef<number>(0);
+  const referenciaIdentificadorIntervalo = useRef<NodeJS.Timeout | null>(null);
+  const referenciaVelocidadeRolamento = useRef<number>(velocidadeRolamentoAtual);
+  referenciaVelocidadeRolamento.current = velocidadeRolamentoAtual;
+
+  // Para a execução do rolamento automático
+  const pararRolamentoAutomatico = useCallback(() => {
+    if (referenciaIdentificadorIntervalo.current) {
+      clearInterval(referenciaIdentificadorIntervalo.current);
+      referenciaIdentificadorIntervalo.current = null;
     }
-    setIsPlaying(false);
+    setEstaExecutandoRolamento(false);
   }, []);
 
-  const startScrolling = useCallback(() => {
-    stopScrolling();
-    setIsPlaying(true);
-
-    // Ajustamos a frequência e o passo baseado na velocidade
-    // Quanto maior a velocidade, maior o passo ou menor o intervalo
-    const step = 1;
-    const baseInterval = 100;
-    const interval = Math.max(16, baseInterval / speed);
-
-    intervalRef.current = setInterval(() => {
-      scrollY.current += step;
-      if (scrollRef.current?.scrollToOffset) {
-        scrollRef.current.scrollToOffset({
-          offset: scrollY.current,
-          animated: true,
-        });
-      } else if (scrollRef.current?.scrollTo) {
-        scrollRef.current.scrollTo({
-          y: scrollY.current,
-          animated: true,
-        });
+  // Inicia o rolamento automático contínuo
+  const iniciarRolamentoAutomatico = useCallback(
+    (velocidadeDesejada?: number) => {
+      if (referenciaIdentificadorIntervalo.current) {
+        clearInterval(referenciaIdentificadorIntervalo.current);
+        referenciaIdentificadorIntervalo.current = null;
       }
-    }, interval);
-  }, [speed, stopScrolling, scrollRef]);
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      stopScrolling();
+      setEstaExecutandoRolamento(true);
+
+      const velocidadeEfetiva =
+        velocidadeDesejada !== undefined
+          ? velocidadeDesejada
+          : referenciaVelocidadeRolamento.current || 1.0;
+
+      // Taxa de atualização fluida (~40fps) e passo proporcional à velocidade
+      const intervaloMilissegundos = 25;
+      const taxaPassoPorTick = Math.max(0.4, Number((velocidadeEfetiva * 0.9).toFixed(2)));
+
+      referenciaIdentificadorIntervalo.current = setInterval(() => {
+        referenciaPosicaoScrollY.current += taxaPassoPorTick;
+
+        if (referenciaComponenteScroll.current?.scrollToOffset) {
+          referenciaComponenteScroll.current.scrollToOffset({
+            offset: referenciaPosicaoScrollY.current,
+            animated: false,
+          });
+        } else if (referenciaComponenteScroll.current?.scrollTo) {
+          referenciaComponenteScroll.current.scrollTo({
+            y: referenciaPosicaoScrollY.current,
+            animated: false,
+          });
+        }
+      }, intervaloMilissegundos);
+    },
+    [referenciaComponenteScroll]
+  );
+
+  // Alterna entre Iniciar e Pausar o rolamento automático
+  const alternarEstadoRolamentoAutomatico = () => {
+    if (estaExecutandoRolamento) {
+      pararRolamentoAutomatico();
     } else {
-      startScrolling();
+      iniciarRolamentoAutomatico(velocidadeRolamentoAtual);
     }
   };
 
-  const handleScroll = (event: any) => {
-    // Sincroniza o scrollY interno se o usuário rolar manualmente
-    if (!isPlaying) {
-      scrollY.current = event.nativeEvent.contentOffset.y;
+  // Trata e sincroniza a posição quando o usuário rola manualmente na tela
+  const tratarEventoRolamentoManual = (eventoRolamentoNativo: any) => {
+    const deslocamentoVerticalNativo =
+      eventoRolamentoNativo?.nativeEvent?.contentOffset?.y;
+
+    if (
+      deslocamentoVerticalNativo !== undefined &&
+      !isNaN(deslocamentoVerticalNativo)
+    ) {
+      // Se não estiver executando rolamento automático, sincroniza a posição com o gesto do usuário
+      if (!estaExecutandoRolamento) {
+        referenciaPosicaoScrollY.current = deslocamentoVerticalNativo;
+      }
     }
   };
 
+  // Atualiza dinamicamente o intervalo quando a velocidade mudar durante a execução
   useEffect(() => {
-    if (isPlaying) {
-      startScrolling();
+    if (estaExecutandoRolamento) {
+      iniciarRolamentoAutomatico(velocidadeRolamentoAtual);
     }
+
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (referenciaIdentificadorIntervalo.current) {
+        clearInterval(referenciaIdentificadorIntervalo.current);
+      }
     };
-  }, [speed, isPlaying, startScrolling]);
+  }, [velocidadeRolamentoAtual, estaExecutandoRolamento, iniciarRolamentoAutomatico]);
 
   return {
-    isPlaying,
-    speed,
-    setSpeed,
-    togglePlay,
-    handleScroll,
+    isPlaying: estaExecutandoRolamento,
+    speed: velocidadeRolamentoAtual,
+    setSpeed: setVelocidadeRolamentoAtual,
+    togglePlay: alternarEstadoRolamentoAutomatico,
+    handleScroll: tratarEventoRolamentoManual,
   };
 };

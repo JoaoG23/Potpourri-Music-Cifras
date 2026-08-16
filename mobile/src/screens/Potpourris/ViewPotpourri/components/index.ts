@@ -1,2 +1,2 @@
-ssssssssssssssssssssssssssssssssssexport { FloatingViewControls } from "./FloatingViewControls";
+export { FloatingViewControls } from "./FloatingViewControls";
 export { FloatingMusicTracker } from "./FloatingMusicTracker";

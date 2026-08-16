@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import { useAutoScroll } from "../../../hooks/useAutoScroll/useAutoScroll";
 import { FloatingViewControls, FloatingMusicTracker } from "./components";
 import { MusicaPotpourriItem } from "../types/potpourriTypes";
 
-interface ApiResponse {
+interface RespostaApiPotpourri {
   musicas_potpourri: MusicaPotpourriItem[];
   pagination: {
     has_next: boolean;
@@ -31,58 +31,85 @@ interface ApiResponse {
 }
 
 export const ViewPotpourri = () => {
-  const route = useRoute<any>();
-  const { id } = route.params || {};
+  const rotaAtual = useRoute<any>();
+  const { id: identificadorPotpourri } = rotaAtual.params || {};
 
-  const flatListRef = useRef<FlatList>(null);
+  const referenciaListaFlatList = useRef<FlatList>(null);
   const [indiceMusicaAtiva, setIndiceMusicaAtiva] = useState<number>(0);
 
-  const { isPlaying, speed, setSpeed, togglePlay, handleScroll } =
-    useAutoScroll(flatListRef);
+  const {
+    isPlaying: estaExecutandoRolamento,
+    speed: velocidadeRolamentoAtual,
+    setSpeed: setVelocidadeRolamentoAtual,
+    togglePlay: alternarEstadoRolamento,
+    handleScroll: tratarEventoRolamentoManual,
+  } = useAutoScroll(referenciaListaFlatList);
+
+  const referenciaVelocidadeAtual = useRef<number>(velocidadeRolamentoAtual);
+  referenciaVelocidadeAtual.current = velocidadeRolamentoAtual;
 
   const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
+    data: dadosRequisicaoPotpourri,
+    fetchNextPage: buscarProximaPaginaPotpourri,
+    hasNextPage: possuiProximaPagina,
+    isFetchingNextPage: estaBuscandoProximaPagina,
+    isLoading: estaCarregandoDadosIniciais,
+    isError: ocorreuErroRequisicao,
   } = useInfiniteQuery({
-    queryKey: ["potpourri-musicas-view", id],
+    queryKey: ["potpourri-musicas-view", identificadorPotpourri],
     queryFn: async ({ pageParam = 1 }) => {
-      const response = await api.get<ApiResponse>(
-        `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=10`
+      const respostaRequisicao = await api.get<RespostaApiPotpourri>(
+        `/musicas-potpourri/by-potpourri/${identificadorPotpourri}?page=${pageParam}&per_page=10`
       );
-      return response;
+      return respostaRequisicao;
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const pagination = lastPage?.data?.pagination;
-      if (!pagination) return null;
-      return pagination.has_next ? (pagination.page || 0) + 1 : null;
+    getNextPageParam: (ultimaPaginaCarregada) => {
+      const informacoesPaginacao = ultimaPaginaCarregada?.data?.pagination;
+      if (!informacoesPaginacao) return null;
+      return informacoesPaginacao.has_next
+        ? (informacoesPaginacao.page || 0) + 1
+        : null;
     },
-    enabled: !!id,
+    enabled: !!identificadorPotpourri,
   });
 
-  const musicasPotpourri =
-    data?.pages?.flatMap((page) => page?.data?.musicas_potpourri || []) || [];
+  // Lista memoizada de músicas do potpourri
+  const listaMusicasPotpourri = useMemo(() => {
+    return (
+      dadosRequisicaoPotpourri?.pages?.flatMap(
+        (pagina) => pagina?.data?.musicas_potpourri || []
+      ) || []
+    );
+  }, [dadosRequisicaoPotpourri]);
 
-  // Inicializa a velocidade com a primeira música carregada
+  // Atualiza a velocidade de rolamento apenas se houver diferença real na velocidade configurada da nova música ativa
   useEffect(() => {
-    if (musicasPotpourri.length > 0 && indiceMusicaAtiva === 0) {
-      const primeiraMusica = musicasPotpourri[0];
-      if (primeiraMusica?.musica?.velocidade_rolamento) {
-        setSpeed(primeiraMusica.musica.velocidade_rolamento);
+    if (
+      listaMusicasPotpourri.length > 0 &&
+      listaMusicasPotpourri[indiceMusicaAtiva]
+    ) {
+      const musicaAtual = listaMusicasPotpourri[indiceMusicaAtiva];
+      const velocidadeConfiguradaMusica =
+        musicaAtual?.musica?.velocidade_rolamento ?? 1.0;
+      const velocidadeNumericaEfetiva =
+        Number(velocidadeConfiguradaMusica) || 1.0;
+
+      if (
+        Math.abs(referenciaVelocidadeAtual.current - velocidadeNumericaEfetiva) >
+        0.01
+      ) {
+        setVelocidadeRolamentoAtual(velocidadeNumericaEfetiva);
       }
     }
-  }, [musicasPotpourri.length]);
+  }, [indiceMusicaAtiva, listaMusicasPotpourri, setVelocidadeRolamentoAtual]);
 
-  // Configuração para detectar qual música está visível na tela
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 30,
+  // Configuração para detectar qual música está mais visível na tela
+  const configuracaoVisibilidadeItens = useRef({
+    itemVisiblePercentThreshold: 35,
   }).current;
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+  const aoMudarItensVisiveisNaLista = useRef(({ viewableItems }: any) => {
     if (viewableItems && viewableItems.length > 0) {
       const primeiroItemVisivel = viewableItems[0];
       if (
@@ -94,31 +121,33 @@ export const ViewPotpourri = () => {
     }
   }).current;
 
-  // Navega até uma música específica ao tocar no tracker ou lista
+  // Navega até uma música específica ao tocar no tracker ou na lista
   const navegarParaIndiceMusica = (indiceDestino: number) => {
-    if (indiceDestino < 0 || indiceDestino >= musicasPotpourri.length) {
+    if (indiceDestino < 0 || indiceDestino >= listaMusicasPotpourri.length) {
       return;
     }
 
     setIndiceMusicaAtiva(indiceDestino);
 
+    const musicaDestino = listaMusicasPotpourri[indiceDestino];
+    const velocidadeMusicaDestino =
+      musicaDestino?.musica?.velocidade_rolamento ?? 1.0;
+    const velocidadeNumerica = Number(velocidadeMusicaDestino) || 1.0;
+
+    setVelocidadeRolamentoAtual(velocidadeNumerica);
+
     try {
-      flatListRef.current?.scrollToIndex({
+      referenciaListaFlatList.current?.scrollToIndex({
         index: indiceDestino,
         animated: true,
         viewPosition: 0,
       });
     } catch {
-      // Ignora falha de renderização inicial do índice
-    }
-
-    const musicaDestino = musicasPotpourri[indiceDestino];
-    if (musicaDestino?.musica?.velocidade_rolamento) {
-      setSpeed(musicaDestino.musica.velocidade_rolamento);
+      // Ignora falha inicial de layout caso o item ainda não tenha sido medido
     }
   };
 
-  const renderItem = ({ item }: { item: MusicaPotpourriItem }) => (
+  const renderizarItemMusica = ({ item }: { item: MusicaPotpourriItem }) => (
     <View style={styles.musicaContainer}>
       <View style={styles.headerContainer}>
         <View style={styles.textContainer}>
@@ -145,7 +174,7 @@ export const ViewPotpourri = () => {
     </View>
   );
 
-  if (isLoading) {
+  if (estaCarregandoDadosIniciais) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#5856D6" />
@@ -153,7 +182,7 @@ export const ViewPotpourri = () => {
     );
   }
 
-  if (isError) {
+  if (ocorreuErroRequisicao) {
     return (
       <View style={styles.center}>
         <Text>Erro ao carregar as músicas do potpourri.</Text>
@@ -164,38 +193,38 @@ export const ViewPotpourri = () => {
   return (
     <View style={styles.container}>
       {/* Rastreador Flutuante Superior */}
-      {musicasPotpourri.length > 0 && (
+      {listaMusicasPotpourri.length > 0 && (
         <FloatingMusicTracker
-          listaMusicasPotpourri={musicasPotpourri}
+          listaMusicasPotpourri={listaMusicasPotpourri}
           indiceMusicaAtual={indiceMusicaAtiva}
-          velocidadeAtual={speed}
+          velocidadeAtual={velocidadeRolamentoAtual}
           aoSelecionarMusica={navegarParaIndiceMusica}
         />
       )}
 
       <FlatList
-        ref={flatListRef}
-        data={musicasPotpourri}
-        renderItem={renderItem}
+        ref={referenciaListaFlatList}
+        data={listaMusicasPotpourri}
+        renderItem={renderizarItemMusica}
         keyExtractor={(item) => item.id.toString()}
-        onScroll={handleScroll}
+        onScroll={tratarEventoRolamentoManual}
         scrollEventThrottle={16}
         contentContainerStyle={styles.listContent}
-        viewabilityConfig={viewabilityConfig}
-        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={configuracaoVisibilidadeItens}
+        onViewableItemsChanged={aoMudarItensVisiveisNaLista}
         onScrollToIndexFailed={(info) => {
           setTimeout(() => {
-            flatListRef.current?.scrollToIndex({
+            referenciaListaFlatList.current?.scrollToIndex({
               index: info.index,
               animated: true,
               viewPosition: 0,
             });
           }, 100);
         }}
-        onEndReached={() => hasNextPage && fetchNextPage()}
+        onEndReached={() => possuiProximaPagina && buscarProximaPaginaPotpourri()}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
-          isFetchingNextPage ? (
+          estaBuscandoProximaPagina ? (
             <ActivityIndicator
               size="small"
               color="#5856D6"
@@ -209,10 +238,10 @@ export const ViewPotpourri = () => {
 
       {/* Controles Flutuantes Inferiores */}
       <FloatingViewControls
-        isPlaying={isPlaying}
-        onPlayPause={togglePlay}
-        speed={speed}
-        onSpeedChange={setSpeed}
+        isPlaying={estaExecutandoRolamento}
+        onPlayPause={alternarEstadoRolamento}
+        speed={velocidadeRolamentoAtual}
+        onSpeedChange={setVelocidadeRolamentoAtual}
       />
     </View>
   );

@@ -8,59 +8,68 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-interface FloatingViewControlsProps {
+export interface PropriedadesControlesFlutuantesVisualizacao {
   isPlaying: boolean;
   onPlayPause: () => void;
   speed: number;
-  onSpeedChange: (newSpeed: number) => void;
+  onSpeedChange: (novaVelocidade: number) => void;
 }
 
-export const FloatingViewControls = ({
-  isPlaying,
-  onPlayPause,
-  speed,
-  onSpeedChange,
-}: FloatingViewControlsProps) => {
-  const increaseSpeed = () => {
-    if (speed < 5) onSpeedChange(parseFloat((speed + 0.5).toFixed(1)));
+export const FloatingViewControls: React.FC<PropriedadesControlesFlutuantesVisualizacao> = ({
+  isPlaying: estaExecutandoRolamento,
+  onPlayPause: alternarEstadoRolamento,
+  speed: velocidadeAtual,
+  onSpeedChange: alterarVelocidadeRolamento,
+}) => {
+  const aumentarVelocidadeRolamento = () => {
+    if (velocidadeAtual < 5) {
+      alterarVelocidadeRolamento(parseFloat((velocidadeAtual + 0.5).toFixed(1)));
+    }
   };
 
-  const decreaseSpeed = () => {
-    if (speed > 0.5) onSpeedChange(parseFloat((speed - 0.5).toFixed(1)));
+  const diminuirVelocidadeRolamento = () => {
+    if (velocidadeAtual > 0.5) {
+      alterarVelocidadeRolamento(parseFloat((velocidadeAtual - 0.5).toFixed(1)));
+    }
   };
 
   return (
-    <View style={styles.controlsPosition}>
-      <View style={styles.controlsContainer}>
-        <View style={styles.controlsRow}>
+    <View style={estilos.posicaoControlesFlutuantes}>
+      <View style={estilos.containerControles}>
+        <View style={estilos.linhaBotoesControle}>
           <TouchableOpacity
-            style={styles.controlButton}
-            onPress={decreaseSpeed}
+            style={estilos.botaoControle}
+            onPress={diminuirVelocidadeRolamento}
+            activeOpacity={0.7}
           >
             <Ionicons name="remove" size={24} color="#fff" />
           </TouchableOpacity>
 
-          <View style={styles.speedDisplay}>
-            <Text style={styles.speedText}>{speed.toFixed(1)}x</Text>
+          <View style={estilos.containerExibicaoVelocidade}>
+            <Text style={estilos.textoVelocidade}>
+              {velocidadeAtual.toFixed(1)}x
+            </Text>
           </View>
 
           <TouchableOpacity
-            style={styles.controlButton}
-            onPress={increaseSpeed}
+            style={estilos.botaoControle}
+            onPress={aumentarVelocidadeRolamento}
+            activeOpacity={0.7}
           >
             <Ionicons name="add" size={24} color="#fff" />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
-              styles.controlButton,
-              styles.playButton,
-              isPlaying && styles.stopButton,
+              estilos.botaoControle,
+              estilos.botaoReproducao,
+              estaExecutandoRolamento && estilos.botaoPausaAtivo,
             ]}
-            onPress={onPlayPause}
+            onPress={alternarEstadoRolamento}
+            activeOpacity={0.8}
           >
             <Ionicons
-              name={isPlaying ? "pause" : "play"}
+              name={estaExecutandoRolamento ? "pause" : "play"}
               size={24}
               color="#fff"
             />
@@ -71,13 +80,13 @@ export const FloatingViewControls = ({
   );
 };
 
-const styles = StyleSheet.create({
-  controlsPosition: {
+const estilos = StyleSheet.create({
+  posicaoControlesFlutuantes: {
     position: "absolute",
     bottom: 50,
     alignSelf: "center",
   },
-  controlsContainer: {
+  containerControles: {
     backgroundColor: "rgba(156, 156, 156, 0.39)",
     padding: 9,
     borderRadius: 30,
@@ -93,11 +102,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  controlsRow: {
+  linhaBotoesControle: {
     flexDirection: "row",
     alignItems: "center",
   },
-  controlButton: {
+  botaoControle: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -106,21 +115,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 5,
   },
-  speedDisplay: {
+  containerExibicaoVelocidade: {
     width: 50,
     alignItems: "center",
   },
-  speedText: {
+  textoVelocidade: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
   },
-  playButton: {
+  botaoReproducao: {
     backgroundColor: "#5856d6",
     width: 60,
     marginLeft: 10,
   },
-  stopButton: {
+  botaoPausaAtivo: {
     backgroundColor: "#D65D56",
   },
 });
