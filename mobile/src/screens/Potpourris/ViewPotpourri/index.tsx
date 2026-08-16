@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Platform,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -18,7 +19,7 @@ import { Title } from "../../../components/Title";
 import { Subtitle } from "../../../components/Subtitle";
 import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { useAutoScroll } from "../../../hooks/useAutoScroll/useAutoScroll";
-import { FloatingViewControls } from "./components/FloatingViewControls";
+import { FloatingViewControls, FloatingMusicTracker } from "./components";
 import { MusicaPotpourriItem } from "../types/potpourriTypes";
 
 interface ApiResponse {
@@ -34,6 +35,8 @@ export const ViewPotpourri = () => {
   const { id } = route.params || {};
 
   const flatListRef = useRef<FlatList>(null);
+  const [indiceMusicaAtiva, setIndiceMusicaAtiva] = useState<number>(0);
+
   const { isPlaying, speed, setSpeed, togglePlay, handleScroll } =
     useAutoScroll(flatListRef);
 
@@ -45,24 +48,75 @@ export const ViewPotpourri = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["potpourri-musicas-view", id], // Mudei de "potpourri-musicas" para "potpourri-musicas-view"
+    queryKey: ["potpourri-musicas-view", id],
     queryFn: async ({ pageParam = 1 }) => {
       const response = await api.get<ApiResponse>(
-        `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=3`
+        `/musicas-potpourri/by-potpourri/${id}?page=${pageParam}&per_page=10`
       );
       return response;
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const pagination = lastPage?.data?.pagination;
-      if (!pagination) return null; // Proteção adicional
+      if (!pagination) return null;
       return pagination.has_next ? (pagination.page || 0) + 1 : null;
     },
     enabled: !!id,
   });
 
   const musicasPotpourri =
-    data?.pages?.flatMap((page) => page?.data?.musicas_potpourri || []) || []; // Gera um unico array com todos elementos
+    data?.pages?.flatMap((page) => page?.data?.musicas_potpourri || []) || [];
+
+  // Inicializa a velocidade com a primeira música carregada
+  useEffect(() => {
+    if (musicasPotpourri.length > 0 && indiceMusicaAtiva === 0) {
+      const primeiraMusica = musicasPotpourri[0];
+      if (primeiraMusica?.musica?.velocidade_rolamento) {
+        setSpeed(primeiraMusica.musica.velocidade_rolamento);
+      }
+    }
+  }, [musicasPotpourri.length]);
+
+  // Configuração para detectar qual música está visível na tela
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 30,
+  }).current;
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems && viewableItems.length > 0) {
+      const primeiroItemVisivel = viewableItems[0];
+      if (
+        primeiroItemVisivel.index !== null &&
+        primeiroItemVisivel.index !== undefined
+      ) {
+        setIndiceMusicaAtiva(primeiroItemVisivel.index);
+      }
+    }
+  }).current;
+
+  // Navega até uma música específica ao tocar no tracker ou lista
+  const navegarParaIndiceMusica = (indiceDestino: number) => {
+    if (indiceDestino < 0 || indiceDestino >= musicasPotpourri.length) {
+      return;
+    }
+
+    setIndiceMusicaAtiva(indiceDestino);
+
+    try {
+      flatListRef.current?.scrollToIndex({
+        index: indiceDestino,
+        animated: true,
+        viewPosition: 0,
+      });
+    } catch {
+      // Ignora falha de renderização inicial do índice
+    }
+
+    const musicaDestino = musicasPotpourri[indiceDestino];
+    if (musicaDestino?.musica?.velocidade_rolamento) {
+      setSpeed(musicaDestino.musica.velocidade_rolamento);
+    }
+  };
 
   const renderItem = ({ item }: { item: MusicaPotpourriItem }) => (
     <View style={styles.musicaContainer}>
@@ -109,6 +163,16 @@ export const ViewPotpourri = () => {
 
   return (
     <View style={styles.container}>
+      {/* Rastreador Flutuante Superior */}
+      {musicasPotpourri.length > 0 && (
+        <FloatingMusicTracker
+          listaMusicasPotpourri={musicasPotpourri}
+          indiceMusicaAtual={indiceMusicaAtiva}
+          velocidadeAtual={speed}
+          aoSelecionarMusica={navegarParaIndiceMusica}
+        />
+      )}
+
       <FlatList
         ref={flatListRef}
         data={musicasPotpourri}
@@ -117,6 +181,17 @@ export const ViewPotpourri = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={styles.listContent}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        onScrollToIndexFailed={(info) => {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({
+              index: info.index,
+              animated: true,
+              viewPosition: 0,
+            });
+          }, 100);
+        }}
         onEndReached={() => hasNextPage && fetchNextPage()}
         onEndReachedThreshold={0.5}
         ListFooterComponent={
@@ -132,6 +207,7 @@ export const ViewPotpourri = () => {
         }
       />
 
+      {/* Controles Flutuantes Inferiores */}
       <FloatingViewControls
         isPlaying={isPlaying}
         onPlayPause={togglePlay}
@@ -153,8 +229,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   listContent: {
-    padding: 20,
-    paddingBottom: 100,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "ios" ? 115 : 85,
+    paddingBottom: 110,
   },
   musicaContainer: {
     marginBottom: 40,
