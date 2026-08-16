@@ -286,7 +286,7 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 12,
     paddingBottom: 8,
     borderWidth: 1,
-    opacity: 0.95,
+    opacity: 0.7,
     borderColor: "rgba(0, 0, 0, 0.08)",
     ...Platform.select({
       ios: {
