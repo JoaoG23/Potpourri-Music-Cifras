@@ -10,7 +10,7 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -21,6 +21,7 @@ import { colorirCifras } from "../../../helpers/colorirCifras/colorirCifras";
 import { useAutoScroll } from "../../../hooks/useAutoScroll/useAutoScroll";
 import { FloatingViewControls, FloatingMusicTracker } from "./components";
 import { MusicaPotpourriItem } from "../types/potpourriTypes";
+import { TNavigationScreenProps } from "../../../Routes";
 
 interface RespostaApiPotpourri {
   musicas_potpourri: MusicaPotpourriItem[];
@@ -35,6 +36,7 @@ interface RespostaApiPotpourri {
 }
 
 export const ViewPotpourri = () => {
+  const navigation = useNavigation<TNavigationScreenProps>();
   const rotaAtual = useRoute<any>();
   const { id: identificadorPotpourri } = rotaAtual.params || {};
 
@@ -63,7 +65,7 @@ export const ViewPotpourri = () => {
     queryKey: ["potpourri-musicas-view", identificadorPotpourri],
     queryFn: async ({ pageParam = 1 }) => {
       const respostaRequisicao = await api.get<RespostaApiPotpourri>(
-        `/musicas-potpourri/by-potpourri/${identificadorPotpourri}?page=${pageParam}&per_page=4`
+        `/musicas-potpourri/by-potpourri/${identificadorPotpourri}?page=${pageParam}&per_page=4`,
       );
       return respostaRequisicao;
     },
@@ -82,7 +84,7 @@ export const ViewPotpourri = () => {
   const listaMusicasPotpourri = useMemo(() => {
     return (
       dadosRequisicaoPotpourri?.pages?.flatMap(
-        (pagina) => pagina?.data?.musicas_potpourri || []
+        (pagina) => pagina?.data?.musicas_potpourri || [],
       ) || []
     );
   }, [dadosRequisicaoPotpourri]);
@@ -109,8 +111,9 @@ export const ViewPotpourri = () => {
         Number(velocidadeConfiguradaMusica) || 1.0;
 
       if (
-        Math.abs(referenciaVelocidadeAtual.current - velocidadeNumericaEfetiva) >
-        0.01
+        Math.abs(
+          referenciaVelocidadeAtual.current - velocidadeNumericaEfetiva,
+        ) > 0.01
       ) {
         setVelocidadeRolamentoAtual(velocidadeNumericaEfetiva);
       }
@@ -167,19 +170,34 @@ export const ViewPotpourri = () => {
           <Title title={item.musica.nome} />
           <Subtitle title={item.musica.artista} />
         </View>
-        {item.musica.link_musica && (
+        <View style={styles.actionsContainer}>
           <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => Linking.openURL(item.musica.link_musica!)}
+            style={styles.editButton}
+            onPress={() =>
+              navigation.navigate("EditMusic", { id: item.musica.id })
+            }
             activeOpacity={0.7}
           >
-            <Ionicons name="open-outline" size={16} color="#fff" />
-            <Text style={styles.linkText}>Cifra Club</Text>
+            <Ionicons name="create-outline" size={16} color="#fff" />
+            <Text style={styles.buttonText}>Editar</Text>
           </TouchableOpacity>
-        )}
+
+          {item.musica.link_musica && (
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => Linking.openURL(item.musica.link_musica!)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="open-outline" size={16} color="#fff" />
+              <Text style={styles.buttonText}>Cifra Club</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <View style={styles.cifraContainer}>
-        <View>{colorirCifras(item.musica.cifra)}</View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View>{colorirCifras(item.musica.cifra)}</View>
+        </ScrollView>
       </View>
       <View style={styles.separator} />
     </View>
@@ -234,7 +252,9 @@ export const ViewPotpourri = () => {
             });
           }, 100);
         }}
-        onEndReached={() => possuiProximaPagina && buscarProximaPaginaPotpourri()}
+        onEndReached={() =>
+          possuiProximaPagina && buscarProximaPaginaPotpourri()
+        }
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           estaBuscandoProximaPagina ? (
@@ -287,6 +307,27 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
   },
+  actionsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
+  editButton: {
+    backgroundColor: "#5856D6",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#5856D6",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   linkButton: {
     backgroundColor: "#fc8f36",
     flexDirection: "row",
@@ -294,14 +335,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
-    marginTop: 4,
     shadowColor: "#fc8f36",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },
-  linkText: {
+  buttonText: {
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
