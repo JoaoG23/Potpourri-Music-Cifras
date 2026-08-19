@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { getPotpourriMusics } from "./api";
 import {
   Card,
@@ -9,7 +9,7 @@ import {
   CardContent,
 } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
-import { ExternalLink, Music2, User, Hash } from "lucide-react";
+import { ExternalLink, Music2, User, Hash, Pencil } from "lucide-react";
 import { FloatingControls } from "../../../components/FloatingControls";
 import { FloatingMusicTracker } from "./components";
 import type { MusicaPotpourriWithDetails } from "../../../types/potpourri";
@@ -430,23 +430,37 @@ export const ViewPotpourri: React.FC = () => {
                     </CardTitle>
                   </div>
 
-                  {itemMusicaPotpourri.musica.link_musica && (
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button
                       variant="outline"
                       size="sm"
                       asChild
-                      className="bg-[#fc8f36] hover:bg-[#e07b2b] text-white hover:text-white border-none flex items-center gap-1.5 rounded-full shrink-0 shadow-sm"
+                      className="bg-blue-600 hover:bg-blue-700 text-white hover:text-white border-none flex items-center gap-1.5 rounded-full shrink-0 shadow-sm"
                     >
-                      <a
-                        href={itemMusicaPotpourri.musica.link_musica}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span className="hidden xs:inline">Cifra Club</span>
-                      </a>
+                      <Link to={`/update-music/${itemMusicaPotpourri.musica.id}`}>
+                        <Pencil className="h-4 w-4" />
+                        <span className="hidden xs:inline">Editar</span>
+                      </Link>
                     </Button>
-                  )}
+
+                    {itemMusicaPotpourri.musica.link_musica && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="bg-[#fc8f36] hover:bg-[#e07b2b] text-white hover:text-white border-none flex items-center gap-1.5 rounded-full shrink-0 shadow-sm"
+                      >
+                        <a
+                          href={itemMusicaPotpourri.musica.link_musica}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          <span className="hidden xs:inline">Cifra Club</span>
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
 
                 <CardContent className="p-4 sm:p-6 space-y-4">
