@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Music, Plus, Trash2, ArrowUp, ArrowDown, Search, User, Pencil } from "lucide-react";
+import { Music, Plus, Trash2, GripVertical, Search, User, Pencil } from "lucide-react";
 
 import {
   Card,
@@ -46,6 +46,19 @@ export const UpdatePotpourri: React.FC = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [selectedMusics, setSelectedMusics] = useState<MusicaPotpourri[]>([]);
   const [musicCache, setMusicCache] = useState<Record<number, MusicType>>({});
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const autoScrollRafRef = useRef<number | null>(null);
+  const scrollSpeedRef = useRef<number>(0);
+
+  useEffect(() => {
+    return () => {
+      if (autoScrollRafRef.current !== null) {
+        cancelAnimationFrame(autoScrollRafRef.current);
+      }
+    };
+  }, []);
 
   // Debounce search term
   useEffect(() => {
@@ -163,20 +176,111 @@ export const UpdatePotpourri: React.FC = () => {
     setSelectedMusics(updatedMusics);
   };
 
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
-    const newMusics = [...selectedMusics];
-    [newMusics[index - 1], newMusics[index]] = [newMusics[index], newMusics[index - 1]];
-    const reordered = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
-    setSelectedMusics(reordered);
+  const startAutoScroll = (speed: number) => {
+    scrollSpeedRef.current = speed;
+    if (autoScrollRafRef.current !== null) return;
+
+    const step = () => {
+      if (scrollContainerRef.current && scrollSpeedRef.current !== 0) {
+        scrollContainerRef.current.scrollTop += scrollSpeedRef.current;
+        autoScrollRafRef.current = requestAnimationFrame(step);
+      } else {
+        autoScrollRafRef.current = null;
+      }
+    };
+    autoScrollRafRef.current = requestAnimationFrame(step);
   };
 
-  const handleMoveDown = (index: number) => {
-    if (index === selectedMusics.length - 1) return;
-    const newMusics = [...selectedMusics];
-    [newMusics[index], newMusics[index + 1]] = [newMusics[index + 1], newMusics[index]];
-    const reordered = newMusics.map((m, i) => ({ ...m, ordem_tocagem: i + 1 }));
+  const stopAutoScroll = () => {
+    scrollSpeedRef.current = 0;
+    if (autoScrollRafRef.current !== null) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+  };
+
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", index.toString());
+  };
+
+  const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+
+    if (!scrollContainerRef.current) return;
+    const rect = scrollContainerRef.current.getBoundingClientRect();
+    const threshold = 70; // 70px de sensibilidade no topo e base para rolagem
+
+    if (e.clientY < rect.top + threshold) {
+      // Próximo do topo -> sobe
+      const intensity = Math.max(0.2, (rect.top + threshold - e.clientY) / threshold);
+      startAutoScroll(-Math.round(intensity * 18));
+    } else if (e.clientY > rect.bottom - threshold) {
+      // Próximo do fundo -> desce
+      const intensity = Math.max(0.2, (e.clientY - (rect.bottom - threshold)) / threshold);
+      startAutoScroll(Math.round(intensity * 18));
+    } else {
+      stopAutoScroll();
+    }
+  };
+
+  const handleContainerDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!scrollContainerRef.current?.contains(e.relatedTarget as Node)) {
+      stopAutoScroll();
+    }
+  };
+
+  const handleRowDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    stopAutoScroll();
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (targetIndex: number, e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stopAutoScroll();
+
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const updatedMusics = [...selectedMusics];
+    const [movedItem] = updatedMusics.splice(draggedIndex, 1);
+    updatedMusics.splice(targetIndex, 0, movedItem);
+
+    const reordered = updatedMusics.map((m, i) => ({
+      ...m,
+      ordem_tocagem: i + 1,
+    }));
+
     setSelectedMusics(reordered);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleContainerDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    stopAutoScroll();
+    if (draggedIndex === null || !scrollContainerRef.current) return;
+
+    const rect = scrollContainerRef.current.getBoundingClientRect();
+    const midPoint = rect.top + rect.height / 2;
+    const targetIndex = e.clientY < midPoint ? 0 : selectedMusics.length - 1;
+
+    handleDrop(targetIndex, e);
   };
 
   const isMusicSelected = (musicId: number) => selectedMusics.some((m) => m.musica_id === musicId);
@@ -314,51 +418,76 @@ export const UpdatePotpourri: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Músicas Selecionadas ({selectedMusics.length})</CardTitle>
+                {selectedMusics.length > 1 && (
+                  <p className="text-xs text-muted-foreground">
+                    Arraste os itens para reorganizar a ordem de reprodução
+                  </p>
+                )}
               </CardHeader>
               <CardContent>
-                <div className="max-h-96 overflow-y-auto">
+                <div
+                  ref={scrollContainerRef}
+                  onDragOver={handleContainerDragOver}
+                  onDragLeave={handleContainerDragLeave}
+                  onDrop={handleContainerDrop}
+                  className="max-h-96 overflow-y-auto"
+                >
                   {selectedMusics.length === 0 ? (
                     <p className="text-gray-500 text-center py-8">Nenhuma música selecionada</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Ordem</TableHead>
+                          <TableHead className="w-10 text-center"></TableHead>
+                          <TableHead className="w-16">Ordem</TableHead>
                           <TableHead>Música</TableHead>
-                          <TableHead>Ações</TableHead>
+                          <TableHead className="w-16 text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {selectedMusics.map((musicaPotpourri, index) => {
                           const music = musicCache[musicaPotpourri.musica_id];
+                          const isDragging = draggedIndex === index;
+                          const isOver = dragOverIndex === index && draggedIndex !== index;
+
                           return (
-                            <TableRow key={musicaPotpourri.musica_id}>
-                              <TableCell>
+                            <TableRow
+                              key={musicaPotpourri.musica_id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(index, e)}
+                              onDragOver={(e) => handleRowDragOver(index, e)}
+                              onDragEnd={handleDragEnd}
+                              onDrop={(e) => handleDrop(index, e)}
+                              className={`cursor-grab active:cursor-grabbing transition-all select-none ${
+                                isDragging ? "opacity-30 bg-muted/60" : ""
+                              } ${
+                                isOver ? "border-t-2 border-primary bg-primary/10" : ""
+                              }`}
+                            >
+                              <TableCell className="text-center px-2 py-2">
+                                <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground inline-block" />
+                              </TableCell>
+                              <TableCell className="py-2">
                                 <Badge variant="secondary">{musicaPotpourri.ordem_tocagem}</Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-2">
                                 <div className="flex items-center gap-2">
-                                  <Music className="h-4 w-4 text-gray-400" />
+                                  <Music className="h-4 w-4 text-gray-400 shrink-0" />
                                   <span className="font-medium">{music?.nome}</span>
                                 </div>
                               </TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button size="sm" variant="outline" onClick={() => handleMoveUp(index)} disabled={index === 0}>
-                                    <ArrowUp className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleMoveDown(index)}
-                                    disabled={index === selectedMusics.length - 1}
-                                  >
-                                    <ArrowDown className="h-4 w-4" />
-                                  </Button>
-                                  <Button size="sm" variant="destructive" onClick={() => handleRemoveMusic(musicaPotpourri.musica_id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
+                              <TableCell className="py-2 text-right">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveMusic(musicaPotpourri.musica_id);
+                                  }}
+                                  title="Remover música"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </TableCell>
                             </TableRow>
                           );
