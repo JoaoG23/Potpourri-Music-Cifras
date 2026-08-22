@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
   FlatList,
   ActivityIndicator,
   StyleSheet,
+  ScrollView,
+  TouchableOpacity,
 } from "react-native";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigation } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
@@ -28,8 +30,14 @@ interface ApiResponse {
   };
 }
 
+interface ArtistasResponse {
+  artistas: string[];
+  total: number;
+}
+
 export const Musics = () => {
   const navigation = useNavigation<TNavigationScreenProps>();
+  const [selectedArtista, setSelectedArtista] = useState<string>("");
 
   const { control } = useForm({
     defaultValues: { search: "" },
@@ -38,14 +46,24 @@ export const Musics = () => {
   const searchWatch = useWatch({ control, name: "search" });
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Debounce da pesquisa para evitar re-renderizações e chamadas de API excessivas
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchWatch);
+      // Limpa filtro de artista ao pesquisar por texto
+      if (searchWatch.length > 0) setSelectedArtista("");
     }, 400);
-
     return () => clearTimeout(handler);
   }, [searchWatch]);
+
+  // Busca lista de artistas
+  const { data: artistasData } = useQuery({
+    queryKey: ["artistas"],
+    queryFn: async () => {
+      const response = await api.get<ArtistasResponse>("musicas/artistas");
+      return response.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
 
   const {
     data,
@@ -55,19 +73,22 @@ export const Musics = () => {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ["musicas", debouncedSearch],
+    queryKey: ["musicas", debouncedSearch, selectedArtista],
     queryFn: async ({ pageParam = 1 }) => {
-      const endpoint = debouncedSearch ? `musicas/search` : `musicas`;
       const params = new URLSearchParams({
         page: pageParam.toString(),
-        per_page: "15", // Aumentado ligeiramente para preencher melhor a tela
+        per_page: "15",
       });
 
-      if (debouncedSearch) params.append("q", debouncedSearch);
+      let endpoint = "musicas";
+      if (selectedArtista) {
+        params.append("artista", selectedArtista);
+      } else if (debouncedSearch) {
+        endpoint = "musicas/search";
+        params.append("q", debouncedSearch);
+      }
 
-      const response = await api.get<ApiResponse>(
-        `${endpoint}?${params.toString()}`
-      );
+      const response = await api.get<ApiResponse>(`${endpoint}?${params.toString()}`);
       return response;
     },
     initialPageParam: 1,
@@ -86,6 +107,10 @@ export const Musics = () => {
 
   const keyExtractor = useCallback((item: Musica) => item.id.toString(), []);
 
+  const handleSelectArtista = (artista: string) => {
+    setSelectedArtista((prev) => (prev === artista ? "" : artista));
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -94,15 +119,56 @@ export const Musics = () => {
         <Input
           name="search"
           control={control}
-          placeholder="Pesquisar músicas..."
+          placeholder="Pesquisar musicas..."
           icon="search"
         />
       </View>
 
+      {/* Chips de artistas */}
+      {artistasData && artistasData.artistas.length > 0 && (
+        <View style={styles.chipsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsScroll}
+          >
+            <TouchableOpacity
+              style={[styles.chip, selectedArtista === "" && styles.chipActive]}
+              onPress={() => setSelectedArtista("")}
+            >
+              <Text style={[styles.chipText, selectedArtista === "" && styles.chipTextActive]}>
+                Todos
+              </Text>
+            </TouchableOpacity>
+            {artistasData.artistas.map((artista) => (
+              <TouchableOpacity
+                key={artista}
+                style={[styles.chip, selectedArtista === artista && styles.chipActive]}
+                onPress={() => handleSelectArtista(artista)}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    selectedArtista === artista && styles.chipTextActive,
+                  ]}
+                >
+                  {artista}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {selectedArtista !== "" && (
+            <Text style={styles.filterInfo}>
+              {artistasData.total} artista{artistasData.total !== 1 ? "s" : ""} no sistema
+            </Text>
+          )}
+        </View>
+      )}
+
       {isLoading ? (
         <ActivityIndicator style={styles.center} size="large" />
       ) : isError ? (
-        <Text style={styles.center}>Erro ao carregar músicas.</Text>
+        <Text style={styles.center}>Erro ao carregar musicas.</Text>
       ) : (
         <FlatList
           data={musicas}
@@ -110,7 +176,6 @@ export const Musics = () => {
           renderItem={renderItem}
           onEndReached={() => hasNextPage && fetchNextPage()}
           onEndReachedThreshold={0.4}
-          // Otimizações de performance
           initialNumToRender={10}
           maxToRenderPerBatch={10}
           windowSize={5}
@@ -135,4 +200,36 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   header: { padding: 15, paddingBottom: 0 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  chipsContainer: {
+    paddingTop: 10,
+  },
+  chipsScroll: {
+    paddingHorizontal: 15,
+    gap: 8,
+  },
+  chip: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "#5856D6",
+    backgroundColor: "white",
+  },
+  chipActive: {
+    backgroundColor: "#5856D6",
+  },
+  chipText: {
+    fontSize: 13,
+    color: "#5856D6",
+    fontWeight: "500",
+  },
+  chipTextActive: {
+    color: "white",
+  },
+  filterInfo: {
+    fontSize: 12,
+    color: "#888",
+    paddingHorizontal: 15,
+    paddingTop: 6,
+  },
 });

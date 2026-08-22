@@ -1,7 +1,7 @@
 from app import db
 from musica.musica_model.musica_model import Musica
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import or_
+from sqlalchemy import or_, distinct, func
 from sqlalchemy.orm import defer
 from musica.musica_services.search_music_by_url.search_music_by_url import search_music_by_url
 import re
@@ -133,6 +133,37 @@ class MusicaService:
         except SQLAlchemyError as e:
             raise Exception(f"Erro ao contar músicas: {str(e)}")
     
+    @staticmethod
+    def get_all_artistas():
+        """Get all distinct artists with total count"""
+        try:
+            results = (
+                db.session.query(Musica.artista)
+                .filter(Musica.artista.isnot(None), Musica.artista != '')
+                .distinct()
+                .order_by(Musica.artista.asc())
+                .all()
+            )
+            artistas = [row.artista for row in results]
+            return artistas, len(artistas)
+        except SQLAlchemyError as e:
+            raise Exception(f"Erro ao buscar artistas: {str(e)}")
+
+    @staticmethod
+    def get_musicas_by_artista(artista, page=1, per_page=10):
+        """Get musicas filtered by artist name"""
+        try:
+            paginated_musicas = Musica.query.options(defer(Musica.cifra)).filter(
+                Musica.artista.ilike(f'%{artista}%')
+            ).order_by(Musica.updated_at.desc()).paginate(
+                page=page,
+                per_page=per_page,
+                error_out=False
+            )
+            return paginated_musicas
+        except SQLAlchemyError as e:
+            raise Exception(f"Erro ao buscar músicas por artista: {str(e)}")
+
     @staticmethod
     def _validate_exists_music_in_app(link_musica):
         musica = Musica.query.filter_by(link_musica=link_musica).first()

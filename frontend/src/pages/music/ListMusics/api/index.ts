@@ -14,3 +14,10 @@ export const searchMusicList = async (searchTerm: string, page: number = 1, perP
   });
   return response.data;
 };
+
+export const getMusicListByArtista = async (artista: string, page: number = 1, perPage: number = 10): Promise<MusicsResponse> => {
+  const response = await api.get('/musicas', {
+    params: { artista, page, per_page: perPage }
+  });
+  return response.data;
+};

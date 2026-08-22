@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -40,33 +40,39 @@ import { Input } from "../../../components/ui/input";
 import { Loading } from "../../../components/custom/Loading";
 import { Error } from "../../../components/custom/Error";
 import { Pagination } from "../../../components/custom/Pagination";
+import { SelectArtistas } from "../../../components/custom/SelectArtistas";
 
-import { getMusicList, searchMusicList } from "./api";
+import { getMusicList, searchMusicList, getMusicListByArtista } from "./api";
 
 export const ListMusics: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
+  const [selectedArtista, setSelectedArtista] = useState<string>("__all__");
   const navigate = useNavigate();
 
-  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms delay
-
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const shouldSearch = debouncedSearchTerm.length >= 3;
+  const shouldFilterByArtista = selectedArtista && selectedArtista !== "__all__";
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["musics", { page, perPage, debouncedSearchTerm }],
-    queryFn: () =>
-      shouldSearch
-        ? searchMusicList(debouncedSearchTerm, page, perPage)
-        : getMusicList(page, perPage),
+    queryKey: ["musics", { page, perPage, debouncedSearchTerm, selectedArtista }],
+    queryFn: () => {
+      if (shouldFilterByArtista) {
+        return getMusicListByArtista(selectedArtista, page, perPage);
+      }
+      if (shouldSearch) {
+        return searchMusicList(debouncedSearchTerm, page, perPage);
+      }
+      return getMusicList(page, perPage);
+    },
     refetchOnWindowFocus: true,
   });
 
@@ -77,15 +83,24 @@ export const ListMusics: React.FC = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
+    if (value.length > 0) setSelectedArtista("__all__");
+    setPage(1);
+  };
+
+  const handleArtistaChange = (artista: string) => {
+    setSelectedArtista(artista);
+    if (artista !== "__all__") {
+      setSearchTerm("");
+      setDebouncedSearchTerm("");
+    }
     setPage(1);
   };
 
   if (error) {
     return <Error message={error?.message || ""} />;
   }
-  const existsMoreThanOnePage =
-    data?.pagination?.pages && data?.pagination?.pages > 1;
 
+  const existsMoreThanOnePage = data?.pagination?.pages && data?.pagination?.pages > 1;
   const totalPages: number = data?.pagination?.pages || 1;
 
   return (
@@ -95,46 +110,58 @@ export const ListMusics: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Music className="h-5 w-5" />
-              Lista de Músicas
+              Lista de Musicas
             </CardTitle>
             <Button
               onClick={() => navigate("/add-music")}
               style={{ backgroundColor: "#3b11e0", borderColor: "#3b11e0" }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Nova Música
+              Nova Musica
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {/* Search Input */}
-          <div className="mb-6">
-            <div className="relative max-w-md">
+          <div className="mb-6 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Pesquisar por música ou artista (mín. 4 caracteres)..."
+                placeholder="Pesquisar por musica ou artista (min. 3 caracteres)..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
-            {shouldSearch && (
-              <p className="text-sm text-gray-600 mt-2">
-                Pesquisando por:{" "}
-                <span className="font-medium">"{debouncedSearchTerm}"</span>
-              </p>
-            )}
+            <SelectArtistas
+              value={selectedArtista}
+              onValueChange={handleArtistaChange}
+            />
           </div>
 
-          {/* Controls */}
+          {shouldSearch && !shouldFilterByArtista && (
+            <p className="text-sm text-gray-600 mb-4">
+              Pesquisando por:{" "}
+              <span className="font-medium">"{debouncedSearchTerm}"</span>
+            </p>
+          )}
+          {shouldFilterByArtista && (
+            <p className="text-sm text-gray-600 mb-4">
+              Filtrando por artista:{" "}
+              <span className="font-medium">"{selectedArtista}"</span>
+              <button
+                className="ml-2 text-xs text-blue-600 hover:underline"
+                onClick={() => handleArtistaChange("__all__")}
+              >
+                Limpar filtro
+              </button>
+            </p>
+          )}
+
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Itens por página:</span>
-              <Select
-                value={perPage.toString()}
-                onValueChange={handlePerPageChange}
-              >
+              <span className="text-sm text-gray-600">Itens por pagina:</span>
+              <Select value={perPage.toString()} onValueChange={handlePerPageChange}>
                 <SelectTrigger className="w-20">
                   <SelectValue />
                 </SelectTrigger>
@@ -149,62 +176,60 @@ export const ListMusics: React.FC = () => {
 
             {data?.pagination && (
               <div className="text-sm text-gray-600">
-                {shouldSearch ? (
+                {shouldFilterByArtista ? (
                   <>
-                    {data?.pagination?.total} resultado(s) para "
-                    {debouncedSearchTerm}" • Página {data?.pagination?.page} de{" "}
-                    {totalPages}
+                    {data?.pagination?.total} musica(s) de "{selectedArtista}" &bull; Pagina {data?.pagination?.page} de {totalPages}
+                  </>
+                ) : shouldSearch ? (
+                  <>
+                    {data?.pagination?.total} resultado(s) para "{debouncedSearchTerm}" &bull; Pagina {data?.pagination?.page} de {totalPages}
                   </>
                 ) : (
                   <>
-                    {data?.pagination?.total} músicas • Página{" "}
-                    {data?.pagination?.page} de {totalPages}
+                    {data?.pagination?.total} musicas &bull; Pagina {data?.pagination?.page} de {totalPages}
                   </>
                 )}
               </div>
             )}
           </div>
 
-          {/* Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>ID</TableHead>
-                  <TableHead>Música</TableHead>
+                  <TableHead>Musica</TableHead>
                   <TableHead>Artista</TableHead>
                   <TableHead>Velocidade</TableHead>
                   <TableHead>Link</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead>Acoes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.musicas?.map((music) => (
                   <TableRow key={music.id}>
-                    <TableCell className="font-mono text-sm">
-                      {music.id}
-                    </TableCell>
+                    <TableCell className="font-mono text-sm">{music.id}</TableCell>
                     <TableCell>
                       <Link to={`/update-music/${music.id}`}>
                         <div className="flex items-center gap-2">
                           <Music className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium ">
-                            {music.nome || "Sem nome"}
-                          </span>
+                          <span className="font-medium">{music.nome || "Sem nome"}</span>
                         </div>
                       </Link>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-400" />
-                        {music.artista || "Artista desconhecido"}
+                        <button
+                          className="hover:underline text-left"
+                          onClick={() => handleArtistaChange(music.artista || "__all__")}
+                        >
+                          {music.artista || "Artista desconhecido"}
+                        </button>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="secondary"
-                        className="flex items-center gap-1 w-fit"
-                      >
+                      <Badge variant="secondary" className="flex items-center gap-1 w-fit">
                         <Clock className="h-3 w-3" />
                         {music.velocidade_rolamento || 1.0}x
                       </Badge>

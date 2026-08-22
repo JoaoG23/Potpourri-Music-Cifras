@@ -26,8 +26,11 @@ def get_all_musicas():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
+        artista = request.args.get('artista', '')
         
-        if search:
+        if artista:
+            paginated_musicas = MusicaService.get_musicas_by_artista(artista, page, per_page)
+        elif search:
             paginated_musicas = MusicaService.search_musicas_by_name(search, page, per_page)
         else:
             paginated_musicas = MusicaService.get_all_musicas(page, per_page)
@@ -46,6 +49,18 @@ def get_all_musicas():
             }
         })
         
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
+
+@musica_bp.route('/artistas', methods=['GET'])
+def get_artistas():
+    """Get all distinct artists with total count"""
+    try:
+        artistas, total = MusicaService.get_all_artistas()
+        return jsonify({
+            'artistas': artistas,
+            'total': total
+        })
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
