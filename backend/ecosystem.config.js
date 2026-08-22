@@ -4,18 +4,25 @@ module.exports = {
     script : "run.py",
     interpreter: "pipenv",
     interpreter_args: "run python",
+    env: {
+      ENVIRONMENT: "production",
+      FLAG_ENV: "prod",
+      PORT: 3004,
+      PIPENV_DONT_LOAD_ENV: "1",
+      PYTHONPATH: "."
+    },
     env_production: {
       ENVIRONMENT: "production",
       FLAG_ENV: "prod",
       PORT: 3004,
-      FLASK_APP: "app.py",
+      PIPENV_DONT_LOAD_ENV: "1",
       PYTHONPATH: "."
     },
     env_development: {
       ENVIRONMENT: "development", 
       FLAG_ENV: "dev",
-      PORT: 3004,
-      FLASK_APP: "app.py",
+      PORT: 5000,
+      PIPENV_DONT_LOAD_ENV: "1",
       PYTHONPATH: "."
     },
     autorestart: true,

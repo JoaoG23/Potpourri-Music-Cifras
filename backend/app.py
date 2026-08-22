@@ -4,7 +4,11 @@ from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+flag_env_temp = os.getenv("FLAG_ENV")
+if flag_env_temp == "prod" or os.path.exists(".env.prod") and flag_env_temp != "dev":
+    load_dotenv(".env.prod", override=True)
+else:
+    load_dotenv(".env", override=True)
 
 from extensions import app, db
 
